@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "Comparative Critical Studies" %}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-12 gap-8 px-4 md:px-8">
+  <!-- {% trans "Left Column" %} -->
+  <div class="col-span-12 md:col-span-8">
+    <div
+      class="flex flex-col md:flex-row md:space-x-6 md:space-y-0 items-start"
+    >
+      <!-- {% trans "Journal Cover" %} -->
+        {% if latest_issue.cover_image %}
+          <img
+            src="{{ latest_issue.cover_image.url }}"
+            alt="{% blocktrans with title=latest_issue.title %}{{ title }} Cover{% endblocktrans %}"
+            class="w-48 flex-shrink-0 shadow-md mx-auto md:mx-0"
+          />
+        {% else %}
+          <img
+            src="{% static 'assets/cover.jpg' %}"
+            alt="{% trans 'Journal Cover' %}"
+            class="w-48 flex-shrink-0 shadow-md mx-auto md:mx-0"
+          />
+        {% endif %}
+
+      <!-- {% trans "Journal Description" %} -->
+      <div class="mt-6 md:mt-0 text-left text-gray-900">
+        <p class="text-sm leading-relaxed">
+{#          <span class="font-bold italic">{{ latest_issue.title }}</span></p>#}
+        <div class="mt-4 text-sm space-y-1">
+            {{ latest_issue.description|safe }}
+        </div>
+      </div>
+    </div>
+
+{#    <!-- {% trans "Tabs" %} -->#}
+{#    <div class="mt-12">#}
+{#      <div class="mb-4 border-b border-gray-200">#}
+{#        <ul class="flex flex-wrap -mb-px text-center" id="myTab" role="tablist">#}
+{#          <li class="me-2" role="presentation">#}
+{#            <button#}
+{#              class="inline-block p-4 border-b-[3px] rounded-t-lg"#}
+{#              id="latest-tab"#}
+{#              data-tabs-target="#latest"#}
+{#              type="button"#}
+{#              role="tab"#}
+{#              aria-controls="latest"#}
+{#              aria-selected="true"#}
+{#            >#}
+{#              {% trans "Latest" %}#}
+{#            </button>#}
+{#          </li>#}
+{#          <li class="me-2" role="presentation">#}
+{#            <button#}
+{#              class="inline-block p-4 border-b-[3px] rounded-t-lg"#}
+{#              id="most-read-tab"#}
+{#              data-tabs-target="#most-read"#}
+{#              type="button"#}
+{#              role="tab"#}
+{#              aria-controls="most-read"#}
+{#              aria-selected="false"#}
+{#            >#}
+{#              {% trans "Most read" %}#}
+{#            </button>#}
+{#          </li>#}
+{#        </ul>#}
+{#      </div>#}
+{#      <div id="myTabContent">#}
+{#        <!-- {% trans "Latest Content" %} -->#}
+{#        <div#}
+{#          class="hidden py-4"#}
+{#          id="latest"#}
+{#          role="tabpanel"#}
+{#          aria-labelledby="latest-tab"#}
+{#        >#}
+{#          <div class="space-y-8">#}
+{#            {% for article in latest_articles %}#}
+{#              <div>#}
+{#                <p class="text-sm text-gray-500">#}
+{#                  {% blocktrans with volume=article.volume issue=article.issue date=article.date %}Volume {{ volume }} | Issue {{ issue }} | {{ date }}{% endblocktrans %}#}
+{#                </p>#}
+{#                <h3 class="text-base font-[500] text-gray-800 mt-1">#}
+{#                  <a href="{{ article.get_absolute_url }}" class="hover:underline">{{ article.title }}</a>#}
+{#                </h3>#}
+{#                <p class="text-base text-gray-500 mt-2">{{ article.author }}</p>#}
+{#              </div>#}
+{#            {% endfor %}#}
+{#          </div>#}
+{#        </div>#}
+{#        <!-- {% trans "Most Read Content" %} -->#}
+{#        <div#}
+{#          class="hidden py-4"#}
+{#          id="most-read"#}
+{#          role="tabpanel"#}
+{#          aria-labelledby="most-read-tab"#}
+{#        >#}
+{#          <div class="space-y-8">#}
+{#            {% for article in most_read_articles %}#}
+{#              <div>#}
+{#                <p class="text-sm text-gray-500">#}
+{#                  {% blocktrans with volume=article.volume issue=article.issue date=article.date %}Volume {{ volume }} | Issue {{ issue }} | {{ date }}{% endblocktrans %}#}
+{#                </p>#}
+{#                <h3 class="text-base font-[500] text-gray-800 mt-1">#}
+{#                  <a href="{{ article.get_absolute_url }}" class="hover:underline">{{ article.title }}</a>#}
+{#                </h3>#}
+{#                <p class="text-base text-gray-500 mt-2">{{ article.author }}</p>#}
+{#              </div>#}
+{#            {% endfor %}#}
+{#          </div>#}
+{#        </div>#}
+{#      </div>#}
+{#    </div>#}
+  </div>
+
+{#  <!-- {% trans "Right Column (Sidebar)" %} -->#}
+{#  <aside class="col-span-12 md:col-span-4 space-y-6">#}
+{#    {% if show_alerts %}#}
+{#      {% include "components/sidebar_alerts.html" %}#}
+{#    {% endif %}#}
+{#    {% if show_publisher %}#}
+{#      {% include "components/sidebar_publisher.html" %}#}
+{#    {% endif %}/#}
+{#    {% if show_free_content %}#}
+{#      {% include "components/sidebar_free_content.html" %}#}
+{#    {% endif %}#}
+{#    {% include "components/sidebar_mailing_list.html" %}#}
+{#    {% if show_news %}#}
+{#      {% include "components/sidebar_news.html" %}#}
+{#    {% endif %}#}
+{#  </aside>#}
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tabButtons = document.querySelectorAll("[data-tabs-target]");
+    const tabContents = document.querySelectorAll('[role="tabpanel"]');
+
+    function updateTabs(targetId) {
+      tabButtons.forEach((button) => {
+        const isSelected = button.getAttribute("data-tabs-target") === targetId;
+        button.setAttribute("aria-selected", isSelected);
+
+        // Reset classes
+        button.classList.remove(
+          "text-[#c51152]",
+          "border-[#c51152]",
+          "font-bold",
+          "text-gray-500",
+          "font-medium",
+          "border-transparent"
+        );
+
+        if (isSelected) {
+          button.classList.add(
+            "text-[#c51152]",
+            "border-[#c51152]",
+            "font-bold"
+          );
+        } else {
+          button.classList.add(
+            "text-gray-500",
+            "font-medium",
+            "border-transparent"
+          );
+        }
+      });
+
+      tabContents.forEach((content) => {
+        if (content.id === targetId.substring(1)) {
+          content.classList.remove("hidden");
+        } else {
+          content.classList.add("hidden");
+        }
+      });
+    }
+
+    tabButtons.forEach((button) => {
+      // Set text size for all tabs
+      button.classList.add("text-base");
+
+      button.addEventListener("click", () => {
+        const targetId = button.getAttribute("data-tabs-target");
+        updateTabs(targetId);
+      });
+    });
+
+    // Initial state
+    updateTabs("#latest");
+  });
+</script>
+{% endblock %}

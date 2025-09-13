@@ -1,0 +1,70 @@
+{# components/accordion_card.html #}
+<style>
+    .accordion-content {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .accordion-content.open {
+      max-height: 2000px; /* uzun matn uchun yetarli */
+      opacity: 1;
+    }
+  </style>
+  <div
+    :class="widthClass"
+    class="bg-white shadow-lg rounded-sm"
+    x-data="{
+      openIndex: null,
+      toggle(idx) { this.openIndex = this.openIndex === idx ? -1 : idx },
+      init() { this.openIndex = typeof default_open !== 'undefined' ? default_open : 0 }
+    }"
+    x-init="init()"
+  >
+    <template x-for="(item, idx) in items" :key="idx">
+      <div class="border-b last:border-b-0">
+        <button
+          type="button"
+          class="flex justify-between items-center w-full px-6 py-4 text-[16px] font-semibold text-left text-[#00325f] focus:outline-none transition"
+          :aria-expanded="openIndex === idx"
+          @click="toggle(idx)"
+        >
+          <span x-html="item.title"></span>
+          <span class="ml-2 flex items-center">
+            <svg
+              x-show="openIndex !== idx"
+              class="w-5 h-5 text-[#c51152] transition-transform duration-300 ease-in-out"
+              :class="{'rotate-45': openIndex === idx}"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              viewBox="0 0 24 24"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" stroke-linecap="round" />
+              <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round" />
+            </svg>
+            <svg
+              x-show="openIndex === idx"
+              class="w-5 h-5 text-[#c51152] transition-opacity duration-300 ease-in-out"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              viewBox="0 0 24 24"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round" />
+            </svg>
+          </span>
+        </button>
+        <div
+          :class="(openIndex === idx ? 'accordion-content open' : 'accordion-content') + ' px-6 pb-4 text-[15px] text-gray-900'"
+        >
+          <div x-html="item.content"></div>
+        </div>
+      </div>
+    </template>
+  </div>
+  <script>
+    document.addEventListener("alpine:init", () => {
+      window.Alpine.plugin(window.collapse);
+    });
+  </script>

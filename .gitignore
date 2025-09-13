@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+
+# Django stuff:
+db.sqlite3
+media/
+static/
+
+# Gunicorn socket file
+gunicorn.sock
+
+# VS Code settings (optional)
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Environment variables
+.env

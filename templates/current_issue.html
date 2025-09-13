@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+  {% if current_issue %}{{ current_issue.title }} - {% endif %}{% trans "Current Issue" %}
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-12 gap-8 px-4 md:px-8">
+  <!-- Main content: Cover image and issue information -->
+  <div class="col-span-12 md:col-span-8">
+    {% if current_issue %}
+      <div class="flex flex-col md:flex-row md:space-x-6 md:space-y-0 items-start">
+        <!-- Cover image -->
+        {% if current_issue.cover_image %}
+          <img
+            src="{{ current_issue.cover_image.url }}"
+            alt="{% blocktrans with title=current_issue.title %}{{ title }} Cover{% endblocktrans %}"
+            class="w-48 flex-shrink-0 shadow-md mx-auto md:mx-0"
+          />
+        {% else %}
+          <img
+            src="{% static 'assets/cover.jpg' %}"
+            alt="{% trans 'Journal Cover' %}"
+            class="w-48 flex-shrink-0 shadow-md mx-auto md:mx-0"
+          />
+        {% endif %}
+
+        <!-- Issue information -->
+        <div class="mt-6 md:mt-0 text-left text-gray-900 w-full">
+{#          <h1 class="text-[26px] font-bold mb-2">{{ current_issue.title }}</h1>#}
+          <div class="text-[21px] font-normal mb-4">
+            {% blocktrans with volume=current_issue.volume issue_number=current_issue.issue_number publication_date=current_issue.publication_date|date:"F Y" %}Volume {{ volume }}&nbsp;|&nbsp;Issue {{ issue_number }}&nbsp;|&nbsp;{{ publication_date }}{% endblocktrans %}
+          </div>
+          <div class="space-y-1 text-[14px]">
+{#            {% if issn_online %}#}
+{#              <div><span class="font-semibold">{% trans "eISSN:" %}</span> {{ issn_online }}</div>#}
+{#            {% endif %}#}
+            {% if publication_frequency %}
+              <div>{{ publication_frequency|safe }}</div>
+            {% endif %}
+          </div>
+
+          {% if current_issue.description %}
+            <div class="mt-4 text-sm text-gray-700">
+              {{ current_issue.description|safe }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Articles list -->
+      {% if articles %}
+        <div class="mt-10 space-y-8">
+          <h2 class="text-xl font-semibold text-gray-900 mb-6">{% trans "Articles in this Issue" %}</h2>
+
+          {% for article in articles %}
+            <div class="relative border-b border-gray-200 pb-6 last:border-b-0">
+              <!-- Access status and publication info -->
+              <div class="flex items-center text-[15px] mb-2">
+                {% if article.accessability == 'open_access' %}
+                  <svg class="w-4 h-4 text-green-600 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2L3 7v11a2 2 0 002 2h10a2 2 0 002-2V7l-7-5zM8 15v-3h4v3H8z"/>
+                  </svg>
+                  <span class="text-green-700 font-medium">{% trans "Open Access" %}</span>
+                {% elif article.accessability == 'subscription' %}
+                  <svg class="w-4 h-4 text-blue-600 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5 8V6a5 5 0 0110 0v2h1a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1h1zm2-2a3 3 0 116 0v2H7V6z"/>
+                  </svg>
+                  <span class="text-blue-700 font-medium">{% trans "Subscription Required" %}</span>
+                {% else %}
+                  <svg class="w-4 h-4 text-orange-600 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5 8V6a5 5 0 0110 0v2h1a1 1 0 011 1v8a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1h1zm2-2a3 3 0 116 0v2H7V6z"/>
+                  </svg>
+                  <span class="text-orange-700 font-medium">{% trans "Restricted Access" %}</span>
+                {% endif %}
+                <span class="mx-2 text-gray-400">|</span>
+                <span class="text-gray-500">{{ article.publication_date|date:"F Y" }}</span>
+                {% if article.views %}
+                  <span class="mx-2 text-gray-400">|</span>
+                  <span class="text-gray-500">{% blocktrans with views=article.views %}{{ views }} views{% endblocktrans %}</span>
+                {% endif %}
+              </div>
+
+              <!-- Article title -->
+              <h3 class="font-semibold text-[17px] mb-2 text-gray-900">{{ article.title }}</h3>
+
+              <!-- Authors -->
+              {% if article.authors %}
+                <div class="text-[15px] text-gray-700 mb-2">
+                  <span class="font-medium">{% trans "By:" %}</span> {{ article.authors }}
+                </div>
+              {% endif %}
+
+              <!-- Description -->
+              {% if article.description %}
+                <div class="text-[14px] text-gray-600 mb-3 line-clamp-3">
+                  {{ article.description|safe }}
+                </div>
+              {% endif %}
+
+              <!-- DOI and page info -->
+              <div class="text-[15px] text-gray-800 mb-3">
+                {% if article.issue.pk %}
+                  <span class="text-gray-700">{% blocktrans with id=article.pk %}Article ID: {{ id }}{% endblocktrans %}</span>
+                {% endif %}
+              </div>
+
+              <!-- Action links -->
+              <div class="flex justify-end text-[15px] text-[#00325f] font-medium space-x-2">
+                {% if article.file %}
+                  <a href="{{ article.file.url }}" class="hover:underline" target="_blank">{% trans "PDF" %}</a>
+                {% else %}
+                  <a href="#" class="hover:underline">{% trans "PDF" %}</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="mt-10 text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">{% trans "No articles available" %}</h3>
+          <p class="mt-1 text-sm text-gray-500">{% trans "Articles for this issue will be published soon." %}</p>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <!-- No current issue available -->
+      <div class="text-center py-20">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        </svg>
+        <h1 class="mt-4 text-2xl font-bold text-gray-900">{% trans "No Current Issue Available" %}</h1>
+        <p class="mt-2 text-gray-600">{% trans "The latest issue is being prepared and will be published soon." %}</p>
+        <div class="mt-6">
+          <a href="{% url 'all_issues' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00325f] hover:bg-blue-700">
+            {% trans "View All Issues" %}
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="col-span-12 md:col-span-4 space-y-6">
+{#    {% include 'components/sidebar_mailing_list.html' %}#}
+
+    <!-- Issue Statistics -->
+    {% if current_issue %}
+      <div class="bg-white rounded-lg shadow-sm p-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{% trans "Issue Information" %}</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600">{% trans "Volume:" %}</span>
+            <span class="font-medium">{{ current_issue.volume }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{% trans "Issue Number:" %}</span>
+            <span class="font-medium">{{ current_issue.issue_number }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{% trans "Published:" %}</span>
+            <span class="font-medium">{{ current_issue.publication_date|date:"M d, Y" }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">{% trans "Articles:" %}</span>
+            <span class="font-medium">{{ articles|length }}</span>
+          </div>
+          {% if articles %}
+            <div class="flex justify-between">
+              <span class="text-gray-600">{% trans "Open Access:" %}</span>
+              <span class="font-medium text-green-600">
+                {% widthratio articles|length 1 1 as total %}
+                {{ articles|length }}
+              </span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Recent Issues -->
+    <div class="bg-white rounded-lg shadow-sm p-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">{% trans "Recent Issues" %}</h3>
+      <div class="text-center">
+        <a href="{% url 'all_issues' %}" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          {% trans "View All Issues" %}
+        </a>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

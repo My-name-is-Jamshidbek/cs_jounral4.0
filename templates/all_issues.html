@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "All Issues" %}{%endblock %}
+{% block content %}
+<div class="grid grid-cols-12 gap-8 px-4 md:px-8">
+  <!-- Left: Decade tabs and years row -->
+  <div class="col-span-12 md:col-span-8">
+    <h1 class="text-2xl font-semibold mb-6">{% trans "All Issues" %}</h1>
+    <!-- Title va 10 yillik orasiga chiziq -->
+    <div class="border-b border-gray-200 mb-0"></div>
+    <!-- Decade tabs -->
+    <div class="flex items-center h-[58px] mb-0 relative">
+      <ul
+        class="flex flex-1 justify-center items-center h-full"
+        id="decadeTabs"
+      >
+        <!-- Decade tabs will be populated dynamically -->
+      </ul>
+      <!-- Decade active underline -->
+      <div
+        id="decadeActiveLine"
+        class="absolute left-0 right-0 bottom-0 h-[6px] pointer-events-none z-10"
+        style="transition: all 0.2s"
+      ></div>
+    </div>
+    <!-- Years row -->
+    <div
+      class="w-full bg-[#f0f0f0] flex items-center h-[58px] relative select-none rounded"
+    >
+      <button
+        id="yearsLeft"
+        class="text-[#757374] text-2xl font-bold px-4 h-full flex items-center justify-center bg-transparent outline-none"
+        aria-label="{% trans 'Scroll left' %}"
+      >
+        &lt;
+      </button>
+      <div
+        class="flex-1 h-full flex items-center overflow-x-auto scrollbar-hide"
+        id="yearsRowContainer"
+      >
+        <div
+          id="yearsRow"
+          class="flex items-center h-full space-x-8 px-2"
+        ></div>
+      </div>
+      <button
+        id="yearsRight"
+        class="text-[#757374] text-2xl font-bold px-4 h-full flex items-center justify-center bg-transparent outline-none"
+        aria-label="{% trans 'Scroll right' %}"
+      >
+        &gt;
+      </button>
+    </div>
+    <div id="issuesList" class="space-y-6 mt-8"></div>
+  </div>
+  <!-- Right: sidebar -->
+  <aside class="col-span-12 md:col-span-4 space-y-6">
+    {% include "components/sidebar_alerts.html" %}
+{#    {% include "components/sidebar_mailing_list.html" %}#}
+  </aside>
+</div>
+<style>
+  .tab-decade {
+    background: transparent;
+    position: relative;
+    height: 100%;
+    transition: color 0.2s;
+    color: #757374;
+    font-weight: 500;
+    outline: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tab-decade.active {
+    color: #c51152 !important;
+    font-weight: bold;
+  }
+  #yearsRow button {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    position: relative;
+    color: #757374;
+    transition: color 0.2s;
+    height: 100%;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.5rem 0 0.5rem;
+  }
+  #yearsRow button.active {
+    color: #c51152;
+    font-weight: bold;
+  }
+  #yearsRow button.active::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 5px;
+    background: #c51152;
+    border-radius: 2px;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+<script>
+  // Load dynamic data from Django context
+  const decades = {{ decades_data|safe }};
+  const issues = {{ issues_data|safe }};
+  const currentYear = {{ current_year }};
+
+  // Translations for JavaScript
+  const translations = {
+    volume: "{% trans 'Volume' %}",
+    issue: "{% trans 'Issue' %}",
+    noIssuesAvailable: "{% trans 'No issues available for this year.' %}"
+  };
+
+  // Find most recent decade that has issues
+  const decadesList = Object.keys(decades).sort().reverse();
+  let selectedDecade = decadesList.length > 0 ? decadesList[0] : null;
+
+  // Find most recent year that has issues
+  let selectedYear = 2025; // Current year from context
+  if (selectedDecade) {
+    const decadeYears = decades[selectedDecade];
+    if (decadeYears && decadeYears.length > 0) {
+      selectedYear = decadeYears[0]; // First year in array (most recent)
+    }
+  }
+
+  function populateDecadeTabs() {
+    const decadeTabs = document.getElementById("decadeTabs");
+    decadeTabs.innerHTML = "";
+
+    decadesList.forEach(decade => {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.className = "tab-decade px-8 h-full flex items-center text-lg font-medium bg-transparent relative";
+      btn.dataset.decade = decade;
+      if (decade === selectedDecade) btn.classList.add("active");
+      btn.textContent = decade;
+      btn.onclick = function() {
+        selectedDecade = this.dataset.decade;
+        document.querySelectorAll(".tab-decade").forEach(b => b.classList.remove("active"));
+        this.classList.add("active");
+        // Set selected year to first year in the decade
+        if (decades[selectedDecade] && decades[selectedDecade].length > 0) {
+          selectedYear = decades[selectedDecade][0];
+        }
+        renderYears();
+        renderIssues();
+        document.getElementById("yearsRowContainer").scrollLeft = 0;
+        updateDecadeActiveLine();
+      };
+      li.appendChild(btn);
+      decadeTabs.appendChild(li);
+    });
+  }
+
+  function renderYears() {
+    const yearsRow = document.getElementById("yearsRow");
+    yearsRow.innerHTML = "";
+
+    if (selectedDecade && decades[selectedDecade]) {
+      decades[selectedDecade].forEach(year => {
+        const btn = document.createElement("button");
+        btn.textContent = year;
+        btn.className = (year === selectedYear ? "active " : "") + "font-medium relative";
+        btn.onclick = () => {
+          selectedYear = year;
+          renderYears();
+          renderIssues();
+        };
+        yearsRow.appendChild(btn);
+      });
+    }
+  }
+
+  function renderIssues() {
+    const issuesList = document.getElementById("issuesList");
+    issuesList.innerHTML = "";
+
+    const yearIssues = issues[selectedYear] || [];
+    yearIssues.forEach((issue, idx, arr) => {
+      const div = document.createElement("div");
+      div.className = "";
+      div.innerHTML =
+        `<div class="text-base font-medium text-gray-800">${translations.volume} ${issue.volume} | ${translations.issue} ${issue.issue} | ${issue.date}</div>` +
+        (issue.title ? `<div class="text-gray-600 font-medium">${issue.title}</div>` : "");
+
+      // Use the pre-generated URL from the backend
+      div.onclick = function() {
+        window.location.href = issue.url;
+      };
+      div.style.cursor = "pointer";
+
+      issuesList.appendChild(div);
+
+      // Add divider if not last item
+      if (idx < arr.length - 1) {
+        const hr = document.createElement("hr");
+        hr.className = "border-gray-200 my-0";
+        issuesList.appendChild(hr);
+      }
+    });
+
+    // Show message if no issues
+    if (yearIssues.length === 0) {
+      const div = document.createElement("div");
+      div.className = "text-gray-500 text-center py-8";
+      div.textContent = translations.noIssuesAvailable;
+      issuesList.appendChild(div);
+    }
+  }
+
+  function updateDecadeActiveLine() {
+    const activeBtn = document.querySelector(".tab-decade.active");
+    const line = document.getElementById("decadeActiveLine");
+    if (activeBtn && line) {
+      const rect = activeBtn.getBoundingClientRect();
+      const parentRect = activeBtn.parentElement.parentElement.getBoundingClientRect();
+      line.style.left = rect.left - parentRect.left + "px";
+      line.style.width = rect.width + "px";
+      line.style.background = "#c51152";
+      line.style.borderRadius = "0 0 3px 3px";
+      line.style.height = "6px";
+    }
+  }
+
+  document.getElementById("yearsLeft").onclick = function() {
+    document.getElementById("yearsRowContainer").scrollBy({ left: -120, behavior: "smooth" });
+  };
+
+  document.getElementById("yearsRight").onclick = function() {
+    document.getElementById("yearsRowContainer").scrollBy({ left: 120, behavior: "smooth" });
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    populateDecadeTabs();
+    renderYears();
+    renderIssues();
+    updateDecadeActiveLine();
+    window.addEventListener("resize", updateDecadeActiveLine);
+  });
+</script>
+{% endblock %} {% block nav_all_issues_active %}active{% endblock %}

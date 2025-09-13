@@ -1,0 +1,30 @@
+{% load i18n %}
+
+<div x-data="{ open: false }" class="mb-4">
+  <button
+    @click="open = !open"
+    class="text-[#0077b6] text-[16px] font-medium hover:underline focus:outline-none flex items-center"
+    :aria-expanded="open.toString()"
+    type="button"
+  >
+    <span x-text="open ? '{% trans 'Preview abstract' %}▲' : '{% trans 'Preview abstract' %}▼'"></span>
+  </button>
+  <div
+    x-show="open"
+    x-transition:enter="transition-all duration-400 ease-in"
+    x-transition:enter-start="max-h-0 opacity-0"
+    x-transition:enter-end="max-h-96 opacity-100"
+    x-transition:leave="transition-all duration-300 ease-out"
+    x-transition:leave-start="max-h-96 opacity-100"
+    x-transition:leave-end="max-h-0 opacity-0"
+    class="overflow-hidden"
+    style="will-change: max-height, opacity"
+  >
+    <div
+      class="bg-white p-4 rounded-sm mt-3 mb-6 text-[16px] text-gray-800"
+      style="box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.13)"
+    >
+      {{ content|safe }}
+    </div>
+  </div>
+</div>

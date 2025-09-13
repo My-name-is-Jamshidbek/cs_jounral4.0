@@ -1,0 +1,569 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CS Journal 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-07-16 15:01+0000\n"
+"PO-Revision-Date: 2025-08-10 11:00+0000\n"
+"Last-Translator:   <admin@mail.com>\n"
+"Language-Team: English <en@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Translated-Using: django-rosetta 0.10.2\n"
+
+#: templates/all_issues.html:5 templates/all_issues.html:10
+#: templates/base.html:237 templates/base.html:343 templates/base.html:508
+msgid "All Issues"
+msgstr "ALL ISSUES"
+
+#: templates/all_issues.html:35
+msgid "Scroll left"
+msgstr "Scroll left"
+
+#: templates/all_issues.html:51
+msgid "Scroll right"
+msgstr "Scroll right"
+
+#: templates/all_issues.html:128
+msgid "Volume"
+msgstr ""
+
+#: templates/all_issues.html:129
+#, fuzzy
+#| msgid "All Issues"
+msgid "Issue"
+msgstr "All Issues"
+
+#: templates/all_issues.html:130
+#, fuzzy
+#| msgid "No issues available for the selected year."
+msgid "No issues available for this year."
+msgstr "No issues available for the selected year."
+
+#: templates/base.html:8
+msgid "My Project"
+msgstr "CS Journal"
+
+#: templates/base.html:143 templates/base.html:326
+msgid "English"
+msgstr "EN"
+
+#: templates/base.html:144 templates/base.html:327
+msgid "Русский"
+msgstr ""
+
+#: templates/base.html:145 templates/base.html:328
+msgid "O'zbek"
+msgstr ""
+
+#: templates/base.html:155
+#| msgid "Published on behalf of"
+msgid "Published by:"
+msgstr " "
+
+#: templates/base.html:162
+msgid "Contact:"
+msgstr ""
+
+#: templates/base.html:173 templates/base.html:547
+msgid "Print ISSN:"
+msgstr ""
+
+#: templates/base.html:177 templates/base.html:550
+msgid "Online ISSN:"
+msgstr ""
+
+#: templates/base.html:201 templates/base.html:223 templates/base.html:337
+#: templates/base.html:561
+msgid "Journal Home"
+msgstr "JOURNAL HOME"
+
+#: templates/base.html:230 templates/base.html:340 templates/base.html:503
+#: templates/current_issue.html:6
+msgid "Current Issue"
+msgstr "CURRENT ISSUE"
+
+#: templates/base.html:243 templates/base.html:348
+#: templates/components/sidebar_mailing_list.html:93
+msgid "Submit"
+msgstr "SUBMIT"
+
+#: templates/base.html:263 templates/base.html:354 templates/base.html:493
+msgid "Submission Guidelines"
+msgstr "Submission Guidelines"
+
+#: templates/base.html:268 templates/base.html:355 templates/base.html:498
+msgid "Permissions"
+msgstr "Permissions"
+
+#: templates/base.html:275 templates/base.html:361 templates/base.html:475
+msgid "About"
+msgstr "ABOUT"
+
+#: templates/base.html:305 templates/base.html:373 templates/base.html:566
+msgid "Subscribe"
+msgstr "Subscribe"
+
+#: templates/base.html:436
+msgid "Close message"
+msgstr ""
+
+#: templates/base.html:458
+#, fuzzy
+#| msgid "Journal Home"
+msgid "Journal Logo"
+msgstr "Journal Home"
+
+#: templates/base.html:462
+#, python-format
+msgid "© %(year)s %(site_title|default:\"Journal\")s. All rights reserved."
+msgstr ""
+
+#: templates/base.html:465
+#| msgid "Published on behalf of"
+msgid "Published by"
+msgstr " "
+
+#: templates/base.html:468
+msgid "13 Infirmary Street, Edinburgh, EH1 1LT, United Kingdom"
+msgstr ""
+
+#: templates/base.html:489
+msgid "Resources"
+msgstr ""
+
+#: templates/base.html:516
+msgid "Follow Us"
+msgstr ""
+
+#: templates/base.html:519
+msgid "Twitter"
+msgstr ""
+
+#: templates/base.html:526
+msgid "LinkedIn"
+msgstr ""
+
+#: templates/base.html:533
+msgid "Facebook"
+msgstr ""
+
+#: templates/base.html:542
+msgid "Contact Information"
+msgstr ""
+
+#: templates/base.html:544
+msgid "Email:"
+msgstr ""
+
+#: templates/base.html:557
+msgid "Quick Links"
+msgstr ""
+
+#: templates/base.html:582
+msgid ""
+"This website uses cookies to ensure you get the best experience on our "
+"website."
+msgstr ""
+"This website uses cookies to ensure you get the best experience on our "
+"website."
+
+#: templates/components/accordion.html:10
+msgid "Preview abstract"
+msgstr "Preview abstract"
+
+#: templates/components/sidebar_alerts.html:2
+msgid "Sign up / RSS"
+msgstr "Sign up / RSS"
+
+#: templates/components/sidebar_alerts.html:6
+msgid "Bell SVG"
+msgstr "Bell Icon"
+
+#: templates/components/sidebar_alerts.html:21
+msgid "Sign up for content alerts"
+msgstr "Sign up for content alerts"
+
+#: templates/components/sidebar_alerts.html:25
+msgid "RSS SVG"
+msgstr "RSS Icon"
+
+#: templates/components/sidebar_alerts.html:40
+msgid "RSS Feed"
+msgstr "RSS Feed"
+
+#: templates/components/sidebar_free_content.html:2
+#: templates/components/sidebar_free_content.html:4
+msgid "Explore free content"
+msgstr "Explore free content"
+
+#: templates/components/sidebar_free_content.html:7
+msgid "Sample issue"
+msgstr "Sample issue"
+
+#: templates/components/sidebar_free_content.html:9
+msgid "Comparative Critical Studies Volume 20, Issue 1"
+msgstr "Comparative Critical Studies Volume 20, Issue 1"
+
+#: templates/components/sidebar_free_content.html:13
+msgid "Featured article"
+msgstr "Featured article"
+
+#: templates/components/sidebar_free_content.html:14
+msgid "Volume 22 | Issue 2 | June 2025"
+msgstr "Volume 22 | Issue 2 | June 2025"
+
+#: templates/components/sidebar_free_content.html:16
+msgid "'I am an old Buddhist soul': An Interview with Gagan Gill"
+msgstr "'I am an old Buddhist soul': An Interview with Gagan Gill"
+
+#: templates/components/sidebar_free_content.html:18
+#: templates/components/sidebar_free_content.html:19
+msgid "Archit Nanda"
+msgstr "Archit Nanda"
+
+#: templates/components/sidebar_mailing_list.html:4
+msgid "Join our Literary Studies mailing list"
+msgstr "Join our Literary Studies mailing list"
+
+#: templates/components/sidebar_mailing_list.html:7
+#, python-format
+msgid ""
+"For all the latest on our books and journals, events in your field, free "
+"articles and 30%% off all EUP books."
+msgstr ""
+"For all the latest on our books and journals, events in your field, free "
+"articles and 30% off all EUP books."
+
+#: templates/components/sidebar_mailing_list.html:15
+msgid "Email address"
+msgstr "Email address"
+
+#: templates/components/sidebar_mailing_list.html:22
+msgid "name@example.ac.uk"
+msgstr "name@example.ac.uk"
+
+#: templates/components/sidebar_mailing_list.html:28
+msgid "First name"
+msgstr "First name"
+
+#: templates/components/sidebar_mailing_list.html:41
+msgid "Last name"
+msgstr "Last name"
+
+#: templates/components/sidebar_mailing_list.html:54
+msgid "Institution"
+msgstr "Institution"
+
+#: templates/components/sidebar_mailing_list.html:61
+msgid "Enter 'None' if no affiliation"
+msgstr "Enter 'None' if no affiliation"
+
+#: templates/components/sidebar_mailing_list.html:68
+msgid "Country"
+msgstr "Country"
+
+#: templates/components/sidebar_mailing_list.html:87
+msgid "Yes I would like to receive Edinburgh University Press emails"
+msgstr "Yes I would like to receive Edinburgh University Press emails"
+
+#: templates/components/sidebar_news.html:2
+#: templates/components/sidebar_news.html:4
+msgid "Journal news"
+msgstr "Journal news"
+
+#: templates/components/sidebar_news.html:5
+msgid "There are no results at this time"
+msgstr "There are no results at this time"
+
+#: templates/components/sidebar_publisher.html:5
+msgid "Published on behalf of"
+msgstr "Published on behalf of"
+
+#: templates/components/sidebar_publisher.html:7
+msgid "BCLA Logo"
+msgstr "BCLA Logo"
+
+#: templates/core/home.html:7
+msgid "Home"
+msgstr "Home"
+
+#: templates/core/home.html:11
+msgid "Welcome to CS Journal"
+msgstr "Welcome to CS Journal"
+
+#: templates/core/home.html:14
+msgid "This is the home page of the CS Journal application."
+msgstr "This is the home page of the CS Journal application."
+
+#: templates/current_issue.html:19 templates/journal_home.html:16
+#, python-format
+msgid "%(title)s Cover"
+msgstr "%(title)s Cover"
+
+#: templates/current_issue.html:25 templates/journal_home.html:12
+#: templates/journal_home.html:22
+msgid "Journal Cover"
+msgstr "Journal Cover"
+
+#: templates/current_issue.html:34
+#, fuzzy, python-format
+#| msgid "Volume %(volume)s | Issue %(issue_number)s | %(date)s"
+msgid ""
+"Volume %(volume)s&nbsp;|&nbsp;Issue "
+"%(issue_number)s&nbsp;|&nbsp;%(publication_date)s"
+msgstr "Volume %(volume)s | Issue %(issue_number)s | %(date)s"
+
+#: templates/current_issue.html:38
+#, fuzzy
+#| msgid "ISSN"
+msgid "ISSN:"
+msgstr "ISSN"
+
+#: templates/current_issue.html:41
+#, fuzzy
+#| msgid "eISSN"
+msgid "eISSN:"
+msgstr "eISSN"
+
+#: templates/current_issue.html:48
+#, fuzzy
+#| msgid "Published on behalf of"
+msgid "Published on behalf of the"
+msgstr "Published on behalf of"
+
+#: templates/current_issue.html:65
+msgid "Articles in this Issue"
+msgstr "Articles in this Issue"
+
+#: templates/current_issue.html:75
+msgid "Open Access"
+msgstr ""
+
+#: templates/current_issue.html:80
+msgid "Subscription Required"
+msgstr ""
+
+#: templates/current_issue.html:85
+msgid "Restricted Access"
+msgstr ""
+
+#: templates/current_issue.html:91
+#, python-format
+msgid "%(views)s views"
+msgstr ""
+
+#: templates/current_issue.html:101
+#, fuzzy
+#| msgid "By"
+msgid "By:"
+msgstr "By"
+
+#: templates/current_issue.html:115
+#, python-format
+msgid "Article ID: %(id)s"
+msgstr ""
+
+#: templates/current_issue.html:122 templates/current_issue.html:124
+msgid "PDF"
+msgstr ""
+
+#: templates/current_issue.html:135
+#, fuzzy
+#| msgid "No issues available yet."
+msgid "No articles available"
+msgstr "No issues available yet."
+
+#: templates/current_issue.html:136
+msgid "Articles for this issue will be published soon."
+msgstr ""
+
+#: templates/current_issue.html:146
+#, fuzzy
+#| msgid "No Current Issue"
+msgid "No Current Issue Available"
+msgstr "No Current Issue"
+
+#: templates/current_issue.html:147
+msgid "The latest issue is being prepared and will be published soon."
+msgstr ""
+
+#: templates/current_issue.html:150 templates/current_issue.html:200
+#, fuzzy
+#| msgid "All Issues"
+msgid "View All Issues"
+msgstr "All Issues"
+
+#: templates/current_issue.html:164
+msgid "Issue Information"
+msgstr ""
+
+#: templates/current_issue.html:167
+msgid "Volume:"
+msgstr ""
+
+#: templates/current_issue.html:171
+msgid "Issue Number:"
+msgstr ""
+
+#: templates/current_issue.html:175
+msgid "Published:"
+msgstr " "
+
+#: templates/current_issue.html:179
+msgid "Articles:"
+msgstr ""
+
+#: templates/current_issue.html:184
+msgid "Open Access:"
+msgstr ""
+
+#: templates/current_issue.html:197
+#, fuzzy
+#| msgid "Current Issue"
+msgid "Recent Issues"
+msgstr "Current Issue"
+
+#: templates/journal_home.html:4
+msgid "Comparative Critical Studies"
+msgstr "Comparative Critical Studies"
+
+#: templates/journal_home.html:7
+msgid "Left Column"
+msgstr "Left Column"
+
+#: templates/journal_home.html:27
+msgid "Journal Description"
+msgstr "Journal Description"
+
+#: templates/journal_home.html:37
+msgid "Tabs"
+msgstr "Tabs"
+
+#: templates/journal_home.html:51
+msgid "Latest"
+msgstr "Latest"
+
+#: templates/journal_home.html:64
+msgid "Most read"
+msgstr "Most read"
+
+#: templates/journal_home.html:70
+msgid "Latest Content"
+msgstr "Latest Content"
+
+#: templates/journal_home.html:81 templates/journal_home.html:102
+#, python-format
+msgid "Volume %(volume)s | Issue %(issue)s | %(date)s"
+msgstr "Volume %(volume)s | Issue %(issue)s | %(date)s"
+
+#: templates/journal_home.html:91
+msgid "Most Read Content"
+msgstr "Most Read Content"
+
+#: templates/journal_home.html:116
+msgid "Right Column (Sidebar)"
+msgstr "Right Column (Sidebar)"
+
+#: templates/subscribe.html:4 templates/subscribe.html:9
+#, fuzzy
+#| msgid "Subscribe"
+msgid "Subscribe and Renew"
+msgstr "Subscribe"
+
+#: templates/subscribe.html:31
+msgid "No main subscription content available."
+msgstr "No main subscription content available."
+
+#: templates/subscribe.html:32
+msgid "Please add main subscription content through the admin panel."
+msgstr "Please add main subscription content through the admin panel."
+
+#: templates/subscribe.html:63
+msgid "No sidebar content available."
+msgstr "No sidebar content available."
+
+#: templates/subscribe.html:64
+#, fuzzy
+#| msgid "Please add main subscription content through the admin panel."
+msgid "Please add sidebar subscription content through the admin panel."
+msgstr "Please add main subscription content through the admin panel."
+
+#: templates/sumbit/permissions/sidebar.html:5
+msgid "Permissions & Access"
+msgstr "Permissions & Access"
+
+#: templates/sumbit/permissions/sidebar.html:6
+msgid "Information about accessing journal content"
+msgstr "Information about accessing journal content"
+
+#: templates/sumbit/permissions/sidebar.html:29
+#: templates/sumbit/permissions/sidebar.html:65
+msgid "No permissions available"
+msgstr "No permissions available"
+
+#: templates/sumbit/permissions/sidebar.html:30
+msgid "Get started by creating permission content in the admin panel."
+msgstr "Get started by creating permission content in the admin panel."
+
+#: templates/sumbit/permissions/sidebar.html:56
+msgid "Show All Permissions"
+msgstr "Show All Permissions"
+
+#: templates/sumbit/permissions/sidebar.html:90
+msgid "Show Less"
+msgstr "Show Less"
+
+#: templates/sumbit/permissions/sidebar.html:103
+msgid "Need Help?"
+msgstr "Need Help?"
+
+#: templates/sumbit/permissions/sidebar.html:104
+msgid "Contact our support team for assistance with permissions and access."
+msgstr "Contact our support team for assistance with permissions and access."
+
+#~ msgid "No Cover"
+#~ msgstr "No Cover"
+
+#, python-format
+#~ msgid "Volume %(volume)s, Issue %(issue_number)s"
+#~ msgstr "Volume %(volume)s, Issue %(issue_number)s"
+
+#~ msgid "View Issue"
+#~ msgstr "View Issue"
+
+#~ msgid "Loading issues..."
+#~ msgstr "Loading issues..."
+
+#, python-format
+#~ msgid ""
+#~ "Published on behalf of the <span class=\"text-sky-800 font-"
+#~ "semibold\">%(society)s</span>"
+#~ msgstr ""
+#~ "Published on behalf of the <span class=\"text-sky-800 font-"
+#~ "semibold\">%(society)s</span>"
+
+#~ msgid "Pages"
+#~ msgstr "Pages"
+
+#~ msgid "Download PDF"
+#~ msgstr "Download PDF"
+
+#~ msgid "View Abstract"
+#~ msgstr "View Abstract"
+
+#~ msgid "No articles available for this issue yet."
+#~ msgstr "No articles available for this issue yet."
+
+#~ msgid "There is no current issue available at this time."
+#~ msgstr "There is no current issue available at this time."
+
+#~ msgid "Please add sidebar content through the admin panel."
+#~ msgstr "Please add sidebar content through the admin panel."

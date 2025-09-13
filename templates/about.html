@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ about.title }}{% endblock %}
+{% block content %}
+<div class="grid grid-cols-12 gap-8 px-4 md:px-8">
+  <!-- Chap qism: rasm va matn -->
+  <div class="col-span-12 md:col-span-8">
+          {{ about.content|safe }}
+  </div>
+  <!-- O'ng qism: DRY - sidebar_alerts komponentidan foydalaniladi -->
+{#  <aside class="col-span-12 md:col-span-4 space-y-6">#}
+{#    {% include 'components/sidebar_mailing_list.html' %}#}
+{#  </aside>#}
+</div>
+{% endblock %}

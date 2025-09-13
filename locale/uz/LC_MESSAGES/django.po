@@ -1,0 +1,588 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CS Journal 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-07-16 15:01+0000\n"
+"PO-Revision-Date: 2025-08-10 11:42+0000\n"
+"Last-Translator:   <admin@mail.com>\n"
+"Language-Team: Uzbek <uz@li.org>\n"
+"Language: uz\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Translated-Using: django-rosetta 0.10.2\n"
+
+#: templates/all_issues.html:5 templates/all_issues.html:10
+#: templates/base.html:237 templates/base.html:343 templates/base.html:508
+msgid "All Issues"
+msgstr "ARXIV"
+
+#: templates/all_issues.html:35
+msgid "Scroll left"
+msgstr "Chapga aylantirish"
+
+#: templates/all_issues.html:51
+msgid "Scroll right"
+msgstr "O'ngga aylantirish"
+
+#: templates/all_issues.html:128
+msgid "Volume"
+msgstr ""
+
+#: templates/all_issues.html:129
+#, fuzzy
+#| msgid "All Issues"
+msgid "Issue"
+msgstr "Barcha Sonlar"
+
+#: templates/all_issues.html:130
+#, fuzzy
+#| msgid "No issues available for the selected year."
+msgid "No issues available for this year."
+msgstr "Tanlangan yil uchun sonlar mavjud emas."
+
+#: templates/base.html:8
+msgid "My Project"
+msgstr "CS Jurnal"
+
+#: templates/base.html:143 templates/base.html:326
+msgid "English"
+msgstr ""
+
+#: templates/base.html:144 templates/base.html:327
+msgid "Русский"
+msgstr ""
+
+#: templates/base.html:145 templates/base.html:328
+msgid "O'zbek"
+msgstr ""
+
+#: templates/base.html:155
+#, fuzzy
+#| msgid "Published on behalf of"
+msgid "Published by:"
+msgstr "Nomidan nashr etilgan"
+
+#: templates/base.html:162
+msgid "Contact:"
+msgstr ""
+
+#: templates/base.html:173 templates/base.html:547
+msgid "Print ISSN:"
+msgstr ""
+
+#: templates/base.html:177 templates/base.html:550
+msgid "Online ISSN:"
+msgstr ""
+
+#: templates/base.html:201 templates/base.html:223 templates/base.html:337
+#: templates/base.html:561
+msgid "Journal Home"
+msgstr "BOSH SAHIFA"
+
+#: templates/base.html:230 templates/base.html:340 templates/base.html:503
+#: templates/current_issue.html:6
+msgid "Current Issue"
+msgstr "JORIY SON"
+
+#: templates/base.html:243 templates/base.html:348
+#: templates/components/sidebar_mailing_list.html:93
+msgid "Submit"
+msgstr "MUALLIFLARGA"
+
+#: templates/base.html:263 templates/base.html:354 templates/base.html:493
+msgid "Submission Guidelines"
+msgstr "Yuborish Bo'yicha Yo'riqnoma"
+
+#: templates/base.html:268 templates/base.html:355 templates/base.html:498
+msgid "Permissions"
+msgstr "Ruxsatlar"
+
+#: templates/base.html:275 templates/base.html:361 templates/base.html:475
+msgid "About"
+msgstr "BIZ HAQIMIZDA"
+
+#: templates/base.html:305 templates/base.html:373 templates/base.html:566
+msgid "Subscribe"
+msgstr "Obuna Bo'lish"
+
+#: templates/base.html:436
+msgid "Close message"
+msgstr ""
+
+#: templates/base.html:458
+#, fuzzy
+#| msgid "Journal Home"
+msgid "Journal Logo"
+msgstr "Jurnal Bosh Sahifasi"
+
+#: templates/base.html:462
+#, python-format
+msgid "© %(year)s %(site_title|default:\"Journal\")s. All rights reserved."
+msgstr ""
+"© %(year)s %(site_title|default:\"Journal\")s. Barcha huquqlar himoyalangan."
+
+#: templates/base.html:465
+#, fuzzy
+#| msgid "Published on behalf of"
+msgid "Published by"
+msgstr "Nomidan nashr etilgan"
+
+#: templates/base.html:468
+msgid "13 Infirmary Street, Edinburgh, EH1 1LT, United Kingdom"
+msgstr ""
+
+#: templates/base.html:489
+msgid "Resources"
+msgstr ""
+
+#: templates/base.html:516
+msgid "Follow Us"
+msgstr ""
+
+#: templates/base.html:519
+msgid "Twitter"
+msgstr ""
+
+#: templates/base.html:526
+msgid "LinkedIn"
+msgstr ""
+
+#: templates/base.html:533
+msgid "Facebook"
+msgstr ""
+
+#: templates/base.html:542
+#, fuzzy
+msgid "Contact Information"
+msgstr "Bog'lanish malumotlari"
+
+#: templates/base.html:544
+msgid "Email:"
+msgstr ""
+
+#: templates/base.html:557
+msgid "Quick Links"
+msgstr ""
+
+#: templates/base.html:582
+msgid ""
+"This website uses cookies to ensure you get the best experience on our "
+"website."
+msgstr ""
+"Ushbu veb-sayt sizga eng yaxshi foydalanuvchi tajribasini taqdim etish uchun"
+" cookie-lardan foydalanadi."
+
+#: templates/components/accordion.html:10
+msgid "Preview abstract"
+msgstr "Annotatsiyani ko'rish"
+
+#: templates/components/sidebar_alerts.html:2
+msgid "Sign up / RSS"
+msgstr "Ro'yxatdan o'tish / RSS"
+
+#: templates/components/sidebar_alerts.html:6
+msgid "Bell SVG"
+msgstr "Qo'ng'iroq Belgisi"
+
+#: templates/components/sidebar_alerts.html:21
+msgid "Sign up for content alerts"
+msgstr "Kontent xabarnomalariga obuna bo'ling"
+
+#: templates/components/sidebar_alerts.html:25
+msgid "RSS SVG"
+msgstr "RSS Belgisi"
+
+#: templates/components/sidebar_alerts.html:40
+msgid "RSS Feed"
+msgstr "RSS Lentasi"
+
+#: templates/components/sidebar_free_content.html:2
+#: templates/components/sidebar_free_content.html:4
+msgid "Explore free content"
+msgstr "Bepul kontentni o'rganing"
+
+#: templates/components/sidebar_free_content.html:7
+msgid "Sample issue"
+msgstr "Namuna son"
+
+#: templates/components/sidebar_free_content.html:9
+msgid "Comparative Critical Studies Volume 20, Issue 1"
+msgstr "Qiyosiy Tanqidiy Tadqiqotlar Jild 20, Son 1"
+
+#: templates/components/sidebar_free_content.html:13
+msgid "Featured article"
+msgstr "Tanlangan maqola"
+
+#: templates/components/sidebar_free_content.html:14
+msgid "Volume 22 | Issue 2 | June 2025"
+msgstr "Jild 22 | Son 2 | Iyun 2025"
+
+#: templates/components/sidebar_free_content.html:16
+msgid "'I am an old Buddhist soul': An Interview with Gagan Gill"
+msgstr "'Men qadimgi buddist ruhman': Gagan Gill bilan suhbat"
+
+#: templates/components/sidebar_free_content.html:18
+#: templates/components/sidebar_free_content.html:19
+msgid "Archit Nanda"
+msgstr "Archit Nanda"
+
+#: templates/components/sidebar_mailing_list.html:4
+msgid "Join our Literary Studies mailing list"
+msgstr "Adabiyotshunoslik bo'yicha pochta ro'yxatimizga qo'shiling"
+
+#: templates/components/sidebar_mailing_list.html:7
+#, python-format
+msgid ""
+"For all the latest on our books and journals, events in your field, free "
+"articles and 30%% off all EUP books."
+msgstr ""
+"Bizning kitoblar va jurnallar, sohadagi tadbirlar, bepul maqolalar va barcha"
+" EUP kitoblariga 30% chegirma haqida so'nggi yangiliklar uchun."
+
+#: templates/components/sidebar_mailing_list.html:15
+msgid "Email address"
+msgstr "Elektron pochta manzili"
+
+#: templates/components/sidebar_mailing_list.html:22
+msgid "name@example.ac.uk"
+msgstr "ism@misol.ac.uk"
+
+#: templates/components/sidebar_mailing_list.html:28
+msgid "First name"
+msgstr "Ism"
+
+#: templates/components/sidebar_mailing_list.html:41
+msgid "Last name"
+msgstr "Familiya"
+
+#: templates/components/sidebar_mailing_list.html:54
+msgid "Institution"
+msgstr "Muassasa"
+
+#: templates/components/sidebar_mailing_list.html:61
+msgid "Enter 'None' if no affiliation"
+msgstr "Agar tegishli emas bo'lsa, 'Yo'q' deb yozing"
+
+#: templates/components/sidebar_mailing_list.html:68
+msgid "Country"
+msgstr "Mamlakat"
+
+#: templates/components/sidebar_mailing_list.html:87
+msgid "Yes I would like to receive Edinburgh University Press emails"
+msgstr ""
+"Ha, men Edinburgh University Press elektron xatlarini olishni xohlayman"
+
+#: templates/components/sidebar_news.html:2
+#: templates/components/sidebar_news.html:4
+msgid "Journal news"
+msgstr "Jurnal yangiliklari"
+
+#: templates/components/sidebar_news.html:5
+msgid "There are no results at this time"
+msgstr "Hozirda natijalar yo'q"
+
+#: templates/components/sidebar_publisher.html:5
+msgid "Published on behalf of"
+msgstr "Nomidan nashr etilgan"
+
+#: templates/components/sidebar_publisher.html:7
+msgid "BCLA Logo"
+msgstr "BCLA Logotipi"
+
+#: templates/core/home.html:7
+msgid "Home"
+msgstr "Bosh Sahifa"
+
+#: templates/core/home.html:11
+msgid "Welcome to CS Journal"
+msgstr "CS Jurnalga Xush Kelibsiz"
+
+#: templates/core/home.html:14
+msgid "This is the home page of the CS Journal application."
+msgstr "Bu CS Jurnal ilovasining bosh sahifasi."
+
+#: templates/current_issue.html:19 templates/journal_home.html:16
+#, python-format
+msgid "%(title)s Cover"
+msgstr "%(title)s Muqovasi"
+
+#: templates/current_issue.html:25 templates/journal_home.html:12
+#: templates/journal_home.html:22
+msgid "Journal Cover"
+msgstr "Jurnal Muqovasi"
+
+#: templates/current_issue.html:34
+#, fuzzy, python-format
+#| msgid "Volume %(volume)s | Issue %(issue_number)s | %(date)s"
+msgid ""
+"Volume %(volume)s&nbsp;|&nbsp;Issue "
+"%(issue_number)s&nbsp;|&nbsp;%(publication_date)s"
+msgstr "Jild %(volume)s | Son %(issue_number)s | %(date)s"
+
+#: templates/current_issue.html:38
+#, fuzzy
+#| msgid "ISSN"
+msgid "ISSN:"
+msgstr "ISSN"
+
+#: templates/current_issue.html:41
+#, fuzzy
+#| msgid "eISSN"
+msgid "eISSN:"
+msgstr "eISSN"
+
+#: templates/current_issue.html:48
+#, fuzzy
+#| msgid "Published on behalf of"
+msgid "Published on behalf of the"
+msgstr "Nomidan nashr etilgan"
+
+#: templates/current_issue.html:65
+msgid "Articles in this Issue"
+msgstr "Ushbu sondagi maqolalar"
+
+#: templates/current_issue.html:75
+msgid "Open Access"
+msgstr ""
+
+#: templates/current_issue.html:80
+msgid "Subscription Required"
+msgstr ""
+
+#: templates/current_issue.html:85
+msgid "Restricted Access"
+msgstr ""
+
+#: templates/current_issue.html:91
+#, python-format
+msgid "%(views)s views"
+msgstr ""
+
+#: templates/current_issue.html:101
+#, fuzzy
+#| msgid "By"
+msgid "By:"
+msgstr "Muallif"
+
+#: templates/current_issue.html:115
+#, python-format
+msgid "Article ID: %(id)s"
+msgstr ""
+
+#: templates/current_issue.html:122 templates/current_issue.html:124
+msgid "PDF"
+msgstr ""
+
+#: templates/current_issue.html:135
+#, fuzzy
+#| msgid "No issues available yet."
+msgid "No articles available"
+msgstr "Hozircha sonlar mavjud emas."
+
+#: templates/current_issue.html:136
+msgid "Articles for this issue will be published soon."
+msgstr ""
+
+#: templates/current_issue.html:146
+#, fuzzy
+#| msgid "No Current Issue"
+msgid "No Current Issue Available"
+msgstr "Joriy Son Yo'q"
+
+#: templates/current_issue.html:147
+msgid "The latest issue is being prepared and will be published soon."
+msgstr ""
+
+#: templates/current_issue.html:150 templates/current_issue.html:200
+#| msgid "All Issues"
+msgid "View All Issues"
+msgstr "Barcha Sonlar"
+
+#: templates/current_issue.html:164
+msgid "Issue Information"
+msgstr ""
+
+#: templates/current_issue.html:167
+msgid "Volume:"
+msgstr ""
+
+#: templates/current_issue.html:171
+msgid "Issue Number:"
+msgstr ""
+
+#: templates/current_issue.html:175
+msgid "Published:"
+msgstr ""
+
+#: templates/current_issue.html:179
+msgid "Articles:"
+msgstr ""
+
+#: templates/current_issue.html:184
+msgid "Open Access:"
+msgstr ""
+
+#: templates/current_issue.html:197
+#, fuzzy
+#| msgid "Current Issue"
+msgid "Recent Issues"
+msgstr "Joriy Son"
+
+#: templates/journal_home.html:4
+#, fuzzy
+#| msgid "Comparative Critical Studies Volume 20, Issue 1"
+msgid "Comparative Critical Studies"
+msgstr "Qiyosiy Tanqidiy Tadqiqotlar Jild 20, Son 1"
+
+#: templates/journal_home.html:7
+msgid "Left Column"
+msgstr ""
+
+#: templates/journal_home.html:27
+#, fuzzy
+#| msgid "Journal news"
+msgid "Journal Description"
+msgstr "Jurnal yangiliklari"
+
+#: templates/journal_home.html:37
+msgid "Tabs"
+msgstr ""
+
+#: templates/journal_home.html:51
+msgid "Latest"
+msgstr ""
+
+#: templates/journal_home.html:64
+msgid "Most read"
+msgstr ""
+
+#: templates/journal_home.html:70
+msgid "Latest Content"
+msgstr ""
+
+#: templates/journal_home.html:81 templates/journal_home.html:102
+#, fuzzy, python-format
+#| msgid "Volume %(volume)s | Issue %(issue_number)s | %(date)s"
+msgid "Volume %(volume)s | Issue %(issue)s | %(date)s"
+msgstr "Jild %(volume)s | Son %(issue_number)s | %(date)s"
+
+#: templates/journal_home.html:91
+msgid "Most Read Content"
+msgstr ""
+
+#: templates/journal_home.html:116
+msgid "Right Column (Sidebar)"
+msgstr ""
+
+#: templates/subscribe.html:4 templates/subscribe.html:9
+#, fuzzy
+#| msgid "Subscribe"
+msgid "Subscribe and Renew"
+msgstr "Obuna Bo'lish"
+
+#: templates/subscribe.html:31
+msgid "No main subscription content available."
+msgstr "Asosiy obuna kontenti mavjud emas."
+
+#: templates/subscribe.html:32
+msgid "Please add main subscription content through the admin panel."
+msgstr "Iltimos, admin panel orqali asosiy obuna kontentini qo'shing."
+
+#: templates/subscribe.html:63
+#, fuzzy
+#| msgid "No main subscription content available."
+msgid "No sidebar content available."
+msgstr "Asosiy obuna kontenti mavjud emas."
+
+#: templates/subscribe.html:64
+#, fuzzy
+#| msgid "Please add main subscription content through the admin panel."
+msgid "Please add sidebar subscription content through the admin panel."
+msgstr "Iltimos, admin panel orqali asosiy obuna kontentini qo'shing."
+
+#: templates/sumbit/permissions/sidebar.html:5
+#, fuzzy
+#| msgid "Permissions"
+msgid "Permissions & Access"
+msgstr "Ruxsatlar"
+
+#: templates/sumbit/permissions/sidebar.html:6
+msgid "Information about accessing journal content"
+msgstr ""
+
+#: templates/sumbit/permissions/sidebar.html:29
+#: templates/sumbit/permissions/sidebar.html:65
+#, fuzzy
+#| msgid "No issues available yet."
+msgid "No permissions available"
+msgstr "Hozircha sonlar mavjud emas."
+
+#: templates/sumbit/permissions/sidebar.html:30
+#, fuzzy
+#| msgid "Please add main subscription content through the admin panel."
+msgid "Get started by creating permission content in the admin panel."
+msgstr "Iltimos, admin panel orqali asosiy obuna kontentini qo'shing."
+
+#: templates/sumbit/permissions/sidebar.html:56
+#| msgid "Permissions"
+msgid "Show All Permissions"
+msgstr "Ruxsatlarr"
+
+#: templates/sumbit/permissions/sidebar.html:90
+msgid "Show Less"
+msgstr ""
+
+#: templates/sumbit/permissions/sidebar.html:103
+msgid "Need Help?"
+msgstr ""
+
+#: templates/sumbit/permissions/sidebar.html:104
+msgid "Contact our support team for assistance with permissions and access."
+msgstr ""
+
+#~ msgid "No Cover"
+#~ msgstr "Muqova Yo'q"
+
+#, python-format
+#~ msgid "Volume %(volume)s, Issue %(issue_number)s"
+#~ msgstr "Jild %(volume)s, Son %(issue_number)s"
+
+#~ msgid "View Issue"
+#~ msgstr "Sonni Ko'rish"
+
+#~ msgid "Loading issues..."
+#~ msgstr "Sonlar yuklanmoqda..."
+
+#, python-format
+#~ msgid ""
+#~ "Published on behalf of the <span class=\"text-sky-800 font-"
+#~ "semibold\">%(society)s</span>"
+#~ msgstr ""
+#~ "<span class=\"text-sky-800 font-semibold\">%(society)s</span> nomidan nashr "
+#~ "etilgan"
+
+#~ msgid "Pages"
+#~ msgstr "Sahifalar"
+
+#~ msgid "Download PDF"
+#~ msgstr "PDF yuklab olish"
+
+#~ msgid "View Abstract"
+#~ msgstr "Annotatsiyani Ko'rish"
+
+#~ msgid "No articles available for this issue yet."
+#~ msgstr "Ushbu son uchun maqolalar hozircha mavjud emas."
+
+#~ msgid "There is no current issue available at this time."
+#~ msgstr "Hozirda joriy son mavjud emas."
+
+#, fuzzy
+#~ msgid "Please add sidebar content through the admin panel."
+#~ msgstr "Iltimos, admin panel orqali asosiy obuna kontentini qo'shing."

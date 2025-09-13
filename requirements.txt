@@ -1,0 +1,11 @@
+asgiref
+Django==4.2.23
+django-ckeditor==6.7.3
+django-js-asset==2.2.0
+Faker
+pillow
+sqlparse==0.5.3
+typing_extensions
+tzdata==2025.2
+django-modeltranslation>=0.18.9
+django-rosetta>=0.9.9

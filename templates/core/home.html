@@ -1,0 +1,34 @@
+<html lang="{{ LANGUAGE_CODE }}">
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Home" %}</title>
+</head>
+<body>
+    <header>
+        <h1>{% trans "Welcome to CS Journal" %}</h1>
+    </header>
+    <main>
+        <p>{% trans "This is the home page of the CS Journal application." %}</p>
+                <form action="{% url 'set_language' %}" method="post" class="inline-block">
+                  {% csrf_token %}
+                  <input name="next" type="hidden" value="{{ request.get_full_path }}" />
+                  <select name="language" onchange="this.form.submit()" class="bg-[#385468] text-white border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-200">
+                    {% get_current_language as LANGUAGE_CODE %}
+                    {% get_available_languages as LANGUAGES %}
+                    {% for lang_code, lang_name in LANGUAGES %}
+                      <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>
+                        {% if lang_code == 'en' %}🇺🇸 English
+                        {% elif lang_code == 'ru' %}🇷🇺 Русский
+                        {% elif lang_code == 'uz' %}🇺🇿 O'zbek
+                        {% endif %}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </form>
+    </main>
+</body>
+</html>
+<head>

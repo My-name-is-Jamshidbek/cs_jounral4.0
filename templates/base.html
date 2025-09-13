@@ -1,0 +1,584 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}{% trans "My Project" %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/flowbite.css' %}" />
+    <script src="{% static 'js/alpine.js' %}" defer></script>
+    <script src="{% static 'js/flowbite.js' %}"></script>
+
+    <style>
+      body {
+        font-family: "Open Sans", sans-serif;
+      }
+      .nav-link {
+        position: relative;
+        display: inline-block;
+      }
+      .nav-link > span {
+        position: relative;
+      }
+      .nav-link > span::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        transform: scaleX(0);
+        height: 4px;
+        bottom: -1.5rem;
+        left: 0;
+        background-color: white;
+        transform-origin: 50%;
+        transition: transform 0.25s ease-out;
+      }
+      .nav-link:hover > span::after,
+      .nav-link.active > span::after {
+        transform: scaleX(1);
+        transform-origin: 50%;
+      }
+
+      /* Custom large padding for desktop */
+      @media (min-width: 1024px) {
+        .lg\:px-custom {
+          padding-left: 7rem !important;
+          padding-right: 7rem !important;
+        }
+      }
+      @media (min-width: 1280px) {
+        .xl\:px-custom {
+          padding-left: 7rem !important;
+          padding-right: 7rem !important;
+        }
+      }
+      @media (min-width: 1536px) {
+        .\32xl\:px-custom {
+          padding-left: 15rem !important;
+          padding-right: 15rem !important;
+        }
+      }
+
+      /* Smooth and slower accordion animation */
+      [data-accordion-content] {
+        transition: all 0.5s ease-in-out;
+      }
+
+      /* --- MOBILE NAV STYLE OVERRIDES --- */
+      /* Force accordion trigger button style */
+      button[data-accordion-target] span,
+      button[data-accordion-target] svg {
+        color: #00325f !important;
+        font-weight: 500;
+      }
+      button[data-accordion-target]:hover,
+      button[data-accordion-target][aria-expanded="true"] {
+        background-color: transparent !important;
+      }
+
+      /* Style all links in mobile nav */
+      #navbar-accordion a {
+        color: #00325f;
+        font-weight: 500;
+      }
+      #navbar-accordion a:hover {
+        text-decoration: none !important;
+        background-color: #f9fafb; /* bg-gray-50 */
+      }
+      /* Force mobile nav toggle bg color */
+      .mobile-nav-toggle {
+        background-color: #00325f !important;
+      }
+      /* Sticky footer only */
+      html,
+      body {
+        height: 100%;
+        min-height: 100vh;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      main {
+        flex: 1 0 auto;
+      }
+      footer {
+        margin-top: auto;
+      }
+    </style>
+  </head>
+  <body class="bg-[#fafafa]">
+    <header>
+      <!-- Banner Section -->
+      <div class="h-[144px] bg-[#385468]">
+        <div class="h-[120px] flex items-center">
+          <div
+            class="container mx-auto flex justify-between items-center px-2 sm:px-8 md:px-16 lg:px-28 lg:px-custom xl:px-custom 2xl:px-custom"
+          >
+            <div>
+              <h1 class="text-white text-xl sm:text-2xl lg:text-[28px] font-bold">
+                {{ site_title|safe }}
+              </h1>
+              {% if site_description %}
+                <p class="text-gray-200 text-sm mt-1 hidden md:block">
+                  {{ site_description|safe }}
+                </p>
+              {% endif %}
+            </div>
+
+            <!-- Header Info Section -->
+            <div class="hidden lg:flex flex-col items-end text-right text-white text-sm">
+              <!-- Language Switcher -->
+              <div class="mb-2">
+                <form action="{% url 'set_language' %}" method="post" class="inline-block">
+                  {% csrf_token %}
+                  <input name="next" type="hidden" value="{{ request.get_full_path }}" />
+                  <select name="language" onchange="this.form.submit()" class="bg-[#385468] text-white border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-200">
+                    {% get_current_language as LANGUAGE_CODE %}
+                    {% get_available_languages as LANGUAGES %}
+                    {% for lang_code, lang_name in LANGUAGES %}
+                      <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>
+                        {% if lang_code == 'en' %}{% trans "En" %}
+                        {% elif lang_code == 'ru' %}{% trans "Ru" %}
+                        {% elif lang_code == 'uz' %}{% trans "Uz" %}
+                        {% endif %}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </form>
+              </div>
+
+              {% if publisher %}
+                <div class="flex items-center mb-1">
+                  <span class="ml-2 font-semibold">{{ publisher|safe }}</span>
+                </div>
+              {% endif %}
+
+              {% if contact_email|safe %}
+                <div class="flex items-center">
+                  <a href="mailto:{{ contact_email|safe }}"
+                     class="ml-2 text-blue-200 hover:text-white transition-colors duration-200">
+                    {{ contact_email|safe }}
+                  </a>
+                </div>
+              {% endif %}
+
+              {% if site_config.issn_print %}
+                <div class="flex items-center">
+                  {% if site_config.issn_print %}
+                      {{ site_config.issn_print|safe }}
+                  {% endif %}
+{#                  {% if site_config.issn_online %}#}
+{#                    {% if site_config.issn_print %} | {% endif %}#}
+{#                    {% trans "Online ISSN:" %} {{ site_config.issn_online }}#}
+{#                  {% endif %}#}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div
+      class="container mx-auto px-2 sm:px-8 md:px-16 lg:px-28 lg:px-custom xl:px-custom 2xl:px-custom"
+    >
+      <nav
+        x-data="{ open: false, submitOpen: false, aboutOpen: false }"
+        class="-mt-[34px] relative z-10 bg-[#00325f]"
+        style="margin-top: -34px"
+      >
+        <!-- Mobile nav toggle button -->
+        <button
+          @click="open = !open"
+          type="button"
+          class="lg:hidden flex items-center justify-between w-full px-4 py-4 text-white font-bold bg-[#00325f] mobile-nav-toggle"
+          :aria-expanded="open"
+        >
+          <span>{% trans "Journal Home" %}</span>
+          <svg
+            :class="{'rotate-180': open}"
+            class="w-4 h-4 shrink-0 transition-transform"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+        </button>
+        <!-- Desktop Menu -->
+        <ul
+          class="hidden lg:flex justify-center items-center text-white text-sm font-bold bg-[#00325f]"
+        >
+          <li>
+            <a
+              href="{% url 'index' %}"
+              class="nav-link px-4 py-6 {% if request.resolver_match.url_name == 'index' %} active{% endif %}"
+              ><span>{% trans "Journal Home" %}</span></a
+            >
+          </li>
+          <li>
+            <a
+              href="{% url 'current_issue' %}"
+              class="nav-link px-4 py-6{% if request.resolver_match.url_name == 'current_issue' %} active font-bold{% endif %}"
+              ><span>{% trans "Current Issue" %}</span></a
+            >
+          </li>
+          <li>
+            <a
+              href="{% url 'all_issues' %}"
+              class="nav-link px-4 py-6{% if request.resolver_match.url_name == 'all_issues' %} active font-bold{% endif %}"
+              ><span>{% trans "All Issues" %}</span></a
+            >
+          </li>
+          <li class="relative group">
+            <a href="#" class="nav-link px-4 py-6">
+              <span class="inline-flex items-center">
+                {% trans "Submit" %}
+                <svg
+                  class="w-4 h-4 ml-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+              </span>
+            </a>
+            <div
+              class="absolute hidden group-hover:block bg-white text-gray-700 shadow-lg rounded-sm mt-0 w-48 z-20"
+            >
+              <a
+                href="{% url 'submission' %}"
+                class="block px-4 py-2 text-sm hover:bg-gray-100"
+                >{% trans "Submission Guidelines" %}</a
+              >
+              <a
+                href="{% url 'demo_permission' %}"
+                class="block px-4 py-2 text-sm hover:bg-gray-100"
+                >{% trans "Permissions" %}</a
+              >
+            </div>
+          </li>
+          <li class="relative group">
+            <a href="#" class="nav-link px-4 py-6">
+              <span class="inline-flex items-center">
+                {% trans "About" %}
+                <svg
+                  class="w-4 h-4 ml-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+              </span>
+            </a>
+            <div
+              class="absolute hidden group-hover:block bg-white text-gray-700 shadow-lg rounded-sm mt-0 w-48 z-20"
+            >
+                {% for about in about_pages %}
+                  <a
+                    href="{% url 'about' about.pk %}"
+                    class="block px-4 py-2 text-sm hover:bg-gray-100{% if request.resolver_match.url_name == 'about' %} font-bold{% endif %}"
+                    >{{ about.title }}</a
+                  >
+                {% endfor %}
+            </div>
+          </li>
+{#          <li>#}
+{#            <a#}
+{#              href="{% url 'subscribe' %}"#}
+{#              class="nav-link px-4 py-6{% if request.resolver_match.url_name == 'subscribe' %} active font-bold{% endif %}"#}
+{#              ><span>{% trans "Subscribe" %}</span></a#}
+{#            >#}
+{#          </li>#}
+        </ul>
+        <!-- Mobile nav menu -->
+        <div
+          x-show="open"
+          x-transition
+          class="lg:hidden w-full bg-white shadow-md rounded-b-sm"
+        >
+          <ul class="flex flex-col font-medium text-[#00325f]">
+            <!-- Language Switcher for Mobile -->
+            <li class="border-b border-gray-200 py-2 px-4">
+              <form action="{% url 'set_language' %}" method="post" class="w-full">
+                {% csrf_token %}
+                <input name="next" type="hidden" value="{{ request.get_full_path }}" />
+                <select name="language" onchange="this.form.submit()" class="w-full bg-white text-[#00325f] border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                  {% get_current_language as LANGUAGE_CODE %}
+                  {% get_available_languages as LANGUAGES %}
+                  {% for lang_code, lang_name in LANGUAGES %}
+                    <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>
+                      {% if lang_code == 'en' %}🇺🇸 {% trans "English" %}
+                      {% elif lang_code == 'ru' %}🇷🇺 {% trans "Русский" %}
+                      {% elif lang_code == 'uz' %}🇺🇿 {% trans "O'zbek" %}
+                      {% endif %}
+                    </option>
+                  {% endfor %}
+                </select>
+              </form>
+            </li>
+
+            <li>
+              <a href="{% url 'index' %}" class="block py-2 px-4{% if request.resolver_match.url_name == 'index' %} font-bold{% endif %}">{% trans "Journal Home" %}</a>
+            </li>
+            <li>
+              <a href="{% url 'current_issue' %}" class="block py-2 px-4{% if request.resolver_match.url_name == 'current_issue' %} font-bold{% endif %}">{% trans "Current Issue" %}</a>
+            </li>
+            <li>
+              <a href="{% url 'all_issues' %}" class="block py-2 px-4{% if request.resolver_match.url_name == 'all_issues' %} font-bold{% endif %}">{% trans "All Issues" %}</a>
+            </li>
+            <!-- Submit dropdown -->
+            <li>
+              <button @click="submitOpen = !submitOpen" type="button" class="flex items-center justify-between w-full py-2 px-4">
+                <span>{% trans "Submit" %}</span>
+                <svg :class="{'rotate-180': submitOpen}" class="w-4 h-4 ml-2 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+              <div x-show="submitOpen" x-transition class="pl-6">
+                <a href="{% url 'submission' %}" class="block py-2 px-4">{% trans "Submission Guidelines" %}</a>
+                <a href="{% url 'permission' 1 %}" class="block py-2 px-4">{% trans "Permissions" %}</a>
+              </div>
+            </li>
+            <!-- About dropdown -->
+            <li>
+              <button @click="aboutOpen = !aboutOpen" type="button" class="flex items-center justify-between w-full py-2 px-4">
+                <span>{% trans "About" %}</span>
+                <svg :class="{'rotate-180': aboutOpen}" class="w-4 h-4 ml-2 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+              <div x-show="aboutOpen" x-transition class="pl-6">
+                {% for about in about_pages %}
+                  <a href="{% url 'about' about.pk %}" class="block py-2 px-4{% if request.resolver_match.url_name == 'about' %} font-bold{% endif %}">{{ about.title }}</a>
+                {% endfor %}
+              </div>
+            </li>
+{#            <li>#}
+{#              <a href="{% url 'subscribe' %}" class="block py-2 px-4{% if request.resolver_match.url_name == 'subscribe' %} font-bold{% endif %}">{% trans "Subscribe" %}</a>#}
+{#            </li>#}
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <main class="py-8">
+      <div
+        class="container mx-auto px-2 sm:px-8 md:px-16 lg:px-28 lg:px-custom xl:px-custom 2xl:px-custom"
+      >
+        <!-- Django Messages Display -->
+        {% if messages %}
+          <div class="mb-6 space-y-3">
+            {% for message in messages %}
+              <div
+                class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% elif message.tags == 'info' %}bg-blue-50 border-blue-400 text-blue-700{% else %}bg-gray-50 border-gray-400 text-gray-700{% endif %}"
+                role="alert"
+                x-data="{ show: true }"
+                x-show="show"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform scale-90"
+                x-transition:enter-end="opacity-100 transform scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform scale-100"
+                x-transition:leave-end="opacity-0 transform scale-90"
+              >
+                <!-- Message Icon -->
+                <div class="flex-shrink-0">
+                  {% if message.tags == 'success' %}
+                    <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                  {% elif message.tags == 'error' %}
+                    <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
+                  {% elif message.tags == 'warning' %}
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                  {% elif message.tags == 'info' %}
+                    <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                  {% else %}
+                    <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                  {% endif %}
+                </div>
+
+                <!-- Message Text -->
+                <div class="ml-3 flex-1">
+                  <p class="text-sm font-medium">
+                    {{ message }}
+                  </p>
+                </div>
+
+                <!-- Close Button -->
+                <div class="ml-auto pl-3">
+                  <button
+                    @click="show = false"
+                    class="inline-flex {% if message.tags == 'success' %}text-green-400 hover:text-green-600{% elif message.tags == 'error' %}text-red-400 hover:text-red-600{% elif message.tags == 'warning' %}text-yellow-400 hover:text-yellow-600{% elif message.tags == 'info' %}text-blue-400 hover:text-blue-600{% else %}text-gray-400 hover:text-gray-600{% endif %} focus:outline-none"
+                    aria-label="{% trans "Close message" %}"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-12 mt-12">
+      <div class="container mx-auto px-2 sm:px-8 md:px-16 lg:px-28 lg:px-custom xl:px-custom 2xl:px-custom">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <!-- Logo and Copyright Section -->
+          <div class="col-span-1 lg:col-span-1">
+            <div class="mb-6">
+              <img src="https://komparativistika.uz/assets_front/img/logo.png" alt="{% trans "Journal Logo" %}" class="w-48 h-auto" />
+            </div>
+            <div class="text-sm text-gray-300 space-y-3">
+              <p>
+                {% blocktrans with year=2025 %}© {{ year }} {{ site_title|default:"Journal"|safe }}. All rights reserved.{% endblocktrans %}
+              </p>
+            </div>
+          </div>
+
+          <!-- About Section -->
+{#          <div class="col-span-1">#}
+{#            <h4 class="text-lg font-semibold text-white mb-4 border-b border-gray-600 pb-2">{% trans "About" %}</h4>#}
+{#            <ul class="space-y-3 text-sm text-gray-300">#}
+{#              {% for about in about_pages|slice:":3" %}#}
+{#                  <li>#}
+{#                    <a href="{% url 'about' about.pk %}" class="text-gray-300 hover:text-white hover:underline transition-colors duration-200">#}
+{#                        {{ about.title }}#}
+{#                    </a>#}
+{#                  </li>#}
+{#                {% endfor %}#}
+{#            </ul>#}
+{#          </div>#}
+
+          <!-- Resources Section -->
+{#          <div class="col-span-1">#}
+{#            <h4 class="text-lg font-semibold text-white mb-4 border-b border-gray-600 pb-2">{% trans "Resources" %}</h4>#}
+{#            <ul class="space-y-3 text-sm text-gray-300">#}
+{#              <li>#}
+{#                <a href="{% url 'submission' %}" class="text-gray-300 hover:text-white hover:underline transition-colors duration-200">#}
+{#                  {% trans "Submission Guidelines" %}#}
+{#                </a>#}
+{#              </li>#}
+{#              <li>#}
+{#                <a href="{% url 'permission' 1 %}" class="text-gray-300 hover:text-white hover:underline transition-colors duration-200">#}
+{#                  {% trans "Permissions" %}#}
+{#                </a>#}
+{#              </li>#}
+{#              <li>#}
+{#                <a href="{% url 'current_issue' %}" class="text-gray-300 hover:text-white hover:underline transition-colors duration-200">#}
+{#                  {% trans "Current Issue" %}#}
+{#                </a>#}
+{#              </li>#}
+{#              <li>#}
+{#                <a href="{% url 'all_issues' %}" class="text-gray-300 hover:text-white hover:underline transition-colors duration-200">#}
+{#                  {% trans "All Issues" %}#}
+{#                </a>#}
+{#              </li>#}
+{#            </ul>#}
+{#          </div>#}
+
+          <!-- Follow Us Section -->
+          <div class="col-span-1">
+            <h4 class="text-lg font-semibold text-white mb-4 border-b border-gray-600 pb-2">{% trans "Follow Us" %}</h4>
+            <div class="flex space-x-4">
+              <!-- Twitter -->
+              <a href="{% if social_twitter %}{{ social_twitter }}{% else %}#{% endif %}" class="w-10 h-10 bg-gray-700 border border-gray-600 rounded-full flex items-center justify-center text-gray-300 hover:bg-white hover:text-gray-800 transition-all duration-200" aria-label="{% trans "Twitter" %}" {% if not social_twitter %}onclick="return false;"{% endif %}>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.223.085c.645 1.956 2.51 3.375 4.72 3.417-1.782 1.374-4.043 2.19-6.49 2.19-.42 0-.834-.024-1.244-.073a13.96 13.96 0 007.548 2.212c9.058 0 14.01-7.382 14.01-13.795 0-.21 0-.42-.015-.63A10.03 10.03 0 0024 4.59z"></path>
+                </svg>
+              </a>
+
+              <!-- LinkedIn -->
+              <a href="{% if social_linkedin %}{{ social_linkedin }}{% else %}#{% endif %}" class="w-10 h-10 bg-gray-700 border border-gray-600 rounded-full flex items-center justify-center text-gray-300 hover:bg-white hover:text-gray-800 transition-all duration-200" aria-label="{% trans "LinkedIn" %}" {% if not social_linkedin %}onclick="return false;"{% endif %}>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path>
+                </svg>
+              </a>
+
+              <!-- Facebook -->
+              <a href="{% if social_facebook %}{{ social_facebook }}{% else %}#{% endif %}" class="w-10 h-10 bg-gray-700 border border-gray-600 rounded-full flex items-center justify-center text-gray-300 hover:bg-white hover:text-gray-800 transition-all duration-200" aria-label="{% trans "Facebook" %}" {% if not social_facebook %}onclick="return false;"{% endif %}>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.326 24h11.495v-9.294H9.691v-3.622h3.13V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.324-.592 1.324-1.326V1.326C24 .592 23.405 0 22.675 0"></path>
+                </svg>
+              </a>
+            </div>
+
+            <!-- Additional Contact Info -->
+            <div class="mt-6 text-sm text-gray-300">
+              <p class="font-medium text-white mb-2">{% trans "Contact Information" %}</p>
+              {% if contact_email %}
+                <p><a href="mailto:{{ contact_email|safe }}" class="text-gray-300 hover:text-white underline">{{ contact_email|safe }}</a></p>
+              {% endif %}
+              {% if site_config.issn_print %}
+                <p>{% trans "Print ISSN:" %} {{ site_config.issn_print|safe }}</p>
+              {% endif %}
+{#              {% if site_config.issn_online %}#}
+{#                <p>{% trans "Online ISSN:" %} {{ site_config.issn_online }}</p>#}
+{#              {% endif %}#}
+            </div>
+          </div>
+
+          <!-- Quick Links Section -->
+{#          <div class="col-span-1 md:col-span-2 lg:col-span-1">#}
+{#            <h4 class="text-lg font-semibold text-white mb-4 border-b border-gray-600 pb-2">{% trans "Quick Links" %}</h4>#}
+{#            <ul class="space-y-3 text-sm text-gray-300">#}
+{#              <li>#}
+{#                <a href="{% url 'index' %}" class="text-gray-300 hover:text-white hover:underline transition-colors duration-200">#}
+{#                  {% trans "Journal Home" %}#}
+{#                </a>#}
+{#              </li>#}
+{#              <li>#}
+{#                <a href="{% url 'subscribe' %}" class="text-gray-300 hover:text-white hover:underline transition-colors duration-200">#}
+{#                  {% trans "Subscribe" %}#}
+{#                </a>#}
+{#              </li>#}
+{#              {% for about in about_pages|slice:":3" %}#}
+{#                <li>#}
+{#                  <a href="{% url 'about' about.pk %}" class="text-gray-300 hover:text-white hover:underline transition-colors duration-200">#}
+{#                    {{ about.title }}#}
+{#                  </a>#}
+{#                </li>#}
+{#              {% endfor %}#}
+{#            </ul>#}
+{#          </div>#}
+        </div>
+
+        <!-- Bottom Border -->
+        <div class="border-t border-gray-600 mt-8 pt-6 text-center text-sm text-gray-400">
+          <p>{% trans "This website uses cookies to ensure you get the best experience on our website." %}</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+<script>
+  if (window.initFlowbite) {
+    window.initFlowbite();
+  }
+</script>
