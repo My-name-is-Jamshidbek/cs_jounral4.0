@@ -4,6 +4,7 @@ from django.utils import timezone
 import json
 
 from django.utils.datetime_safe import datetime
+from django.db.models import F
 
 from issue.models import Issue, JournalIssue
 
@@ -99,3 +100,19 @@ def all_issues(request):
     }
 
     return render(request, 'all_issues.html', context)
+
+
+def article_detail(request, pk):
+    article = get_object_or_404(JournalIssue, pk=pk)
+    # Increment views atomically
+    JournalIssue.objects.filter(pk=pk).update(views=F('views') + 1)
+    article.refresh_from_db(fields=['views'])
+    authors_list = [a.strip() for a in (article.authors or '').replace(';', ',').split(',') if a.strip()]
+    absolute_url = request.build_absolute_uri(article.get_absolute_url())
+    context = {
+        'article': article,
+        'issue_obj': article.issue,
+        'authors_list': authors_list,
+        'absolute_url': absolute_url,
+    }
+    return render(request, 'article_detail.html', context)

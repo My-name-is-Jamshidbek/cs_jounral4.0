@@ -84,7 +84,9 @@
               </div>
 
               <!-- Article title -->
-              <h3 class="font-semibold text-[17px] mb-2 text-gray-900">{{ article.title }}</h3>
+              <h3 class="font-semibold text-[17px] mb-2 text-gray-900">
+                <a href="{{ article.get_absolute_url }}" class="hover:underline">{{ article.title }}</a>
+              </h3>
 
               <!-- Authors -->
               {% if article.authors %}

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jurnal-komparativistika.uz/sitemap.xml
+# Additional disallows (uncomment if needed):
+# Disallow: /admin/
+# Disallow: /media/private/
+

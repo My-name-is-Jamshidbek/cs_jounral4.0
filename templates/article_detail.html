@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ article.title }} | {{ site_title }}{% endblock %}
+
+{% block scholar_meta %}
+  <link rel="canonical" href="{{ absolute_url }}" />
+  <meta name="robots" content="index,follow" />
+  <meta name="citation_title" content="{{ article.title|striptags }}" />
+  {% for author in authors_list %}
+    <meta name="citation_author" content="{{ author }}" />
+  {% endfor %}
+  <meta name="citation_publication_date" content="{{ article.publication_date|date:'Y/m/d' }}" />
+  <meta name="citation_journal_title" content="{{ site_title|striptags }}" />
+  {% if article.volume %}<meta name="citation_volume" content="{{ article.volume }}" />{% endif %}
+  {% if article.issue_number %}<meta name="citation_issue" content="{{ article.issue_number }}" />{% endif %}
+  {% if site_config.issn_print %}<meta name="citation_issn" content="{{ site_config.issn_print }}" />{% endif %}
+  {% if site_config.issn_online %}<meta name="citation_issn" content="{{ site_config.issn_online }}" />{% endif %}
+  {% if article.file %}<meta name="citation_pdf_url" content="{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}" />{% endif %}
+  <meta name="citation_language" content="{{ LANGUAGE_CODE }}" />
+  {% if article.description %}<meta name="citation_abstract" content="{{ article.description|striptags|truncatechars:500 }}" />{% endif %}
+  {% if site_keywords %}<meta name="citation_keywords" content="{{ site_keywords }}" />{% endif %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "{{ article.title|escapejs }}",
+    "name": "{{ article.title|escapejs }}",
+    "url": "{{ absolute_url }}",
+    {% if article.file %}"sameAs": "{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}",
+    {% endif %}"datePublished": "{{ article.publication_date|date:'Y-m-d' }}",
+    "inLanguage": "{{ LANGUAGE_CODE }}",
+    "isPartOf": {
+      "@type": "Periodical",
+      "name": "{{ site_title|striptags|escapejs }}"{% if site_config.issn_print %},
+      "issn": "{{ site_config.issn_print }}"{% elif site_config.issn_online %},
+      "issn": "{{ site_config.issn_online }}"{% endif %}
+    },
+    "author": [
+      {% for a in authors_list %}{"@type": "Person", "name": "{{ a|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}
+    ]{% if article.volume %},
+    "volumeNumber": "{{ article.volume }}"{% endif %}{% if article.issue_number %},
+    "issueNumber": "{{ article.issue_number }}"{% endif %}{% if article.description %},
+    "description": "{{ article.description|striptags|truncatechars:400|escapejs }}"{% endif %}{% if article.citation_count %},
+    "citationCount": {{ article.citation_count }}{% endif %}{% if article.scholar_cluster_id %},
+    "identifier": "gs:{{ article.scholar_cluster_id }}"{% endif %}{% if article.file %},
+    "encoding": {"@type": "MediaObject", "contentUrl": "{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}", "fileFormat": "application/pdf"}{% endif %},
+    "publisher": {"@type": "Organization", "name": "{{ publisher|default:site_title|escapejs }}"}
+  }
+  </script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <nav class="text-sm mb-6 text-gray-600">
+    <a href="{% url 'current_issue' %}" class="hover:underline">{% trans 'Current Issue' %}</a>
+    <span class="mx-2">/</span>
+    <span class="text-gray-800">{{ article.title|truncatechars:80 }}</span>
+  </nav>
+
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ article.title }}</h1>
+    {% if authors_list %}
+      <p class="text-gray-700 text-sm">{% trans 'Authors:' %}
+        <span class="font-medium">{{ authors_list|join:', ' }}</span>
+      </p>
+    {% endif %}
+    <p class="text-xs text-gray-500 mt-1">
+      {% trans 'Published' %}: {{ article.publication_date|date:'F d, Y' }}
+      {% if article.volume %} • {% trans 'Vol.' %} {{ article.volume }}{% endif %}
+      {% if article.issue_number %} {% trans 'Issue' %} {{ article.issue_number }}{% endif %}
+      {% if article.citation_count %} • {% trans 'Citations' %}: {{ article.citation_count }}{% endif %}
+      • {% trans 'Views' %}: {{ article.views }}
+    </p>
+  </header>
+
+  {% if article.description %}
+    <section class="prose max-w-none mb-8 text-sm leading-relaxed">
+      {{ article.description|safe }}
+    </section>
+  {% endif %}
+
+  <div class="flex flex-wrap gap-4 mb-10">
+    {% if article.file %}
+      <a href="{{ article.file.url }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-[#00325f] text-white rounded hover:bg-blue-700 text-sm font-medium shadow">
+        {% trans 'Download PDF' %}
+      </a>
+    {% endif %}
+  </div>
+
+  <aside class="bg-white border rounded p-4 text-xs text-gray-600 space-y-2">
+    <h2 class="font-semibold text-gray-800 text-sm mb-2">{% trans 'Article Metadata' %}</h2>
+    <p><strong>{% trans 'Permanent URL' %}:</strong> <a href="{{ absolute_url }}" class="text-blue-700 break-all">{{ absolute_url }}</a></p>
+    {% if site_config.issn_print %}<p><strong>{% trans 'Print ISSN' %}:</strong> {{ site_config.issn_print }}</p>{% endif %}
+    {% if site_config.issn_online %}<p><strong>{% trans 'Online ISSN' %}:</strong> {{ site_config.issn_online }}</p>{% endif %}
+    {% if article.last_scholar_sync %}<p><strong>{% trans 'Last Scholar Sync' %}:</strong> {{ article.last_scholar_sync|date:'Y-m-d H:i' }}</p>{% endif %}
+  </aside>
+</div>
+{% endblock %}
