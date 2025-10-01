@@ -1,5 +1,5 @@
 asgiref
-Django==4.2.23
+Django==4.2.25
 django-ckeditor==6.7.3
 django-js-asset==2.2.0
 Faker
