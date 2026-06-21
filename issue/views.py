@@ -4,7 +4,7 @@ from django.utils import timezone
 import json
 
 from django.utils.datetime_safe import datetime
-from django.db.models import F
+from django.db.models import F, Q
 
 from issue.models import Issue, JournalIssue
 
@@ -100,6 +100,36 @@ def all_issues(request):
     }
 
     return render(request, 'all_issues.html', context)
+
+
+def search(request):
+    """Search articles across all text fields (all languages)."""
+    query = (request.GET.get('q') or '').strip()
+    results = JournalIssue.objects.none()
+
+    if query:
+        # Search every translatable column (uz/en/ru) plus the non-translated fields.
+        lookups = Q()
+        for field in (
+            'title', 'title_uz', 'title_en', 'title_ru',
+            'description', 'description_uz', 'description_en', 'description_ru',
+            'authors', 'volume', 'issue_number',
+            'issue__title', 'issue__title_uz', 'issue__title_en', 'issue__title_ru',
+        ):
+            lookups |= Q(**{f'{field}__icontains': query})
+        results = (
+            JournalIssue.objects.filter(lookups)
+            .select_related('issue')
+            .distinct()
+            .order_by('-publication_date')
+        )
+
+    context = {
+        'query': query,
+        'articles': results,
+        'results_count': results.count() if query else 0,
+    }
+    return render(request, 'search.html', context)
 
 
 def article_detail(request, pk):

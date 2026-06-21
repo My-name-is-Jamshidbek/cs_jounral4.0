@@ -16,6 +16,9 @@
     <script src="{% static 'js/flowbite.js' %}"></script>
 
     <style>
+      [x-cloak] {
+        display: none !important;
+      }
       body {
         font-family: "Open Sans", sans-serif;
       }
@@ -216,6 +219,7 @@
         </button>
         <!-- Desktop Menu -->
         <ul
+          x-data="{ searchOpen: false }"
           class="hidden lg:flex justify-center items-center text-white text-sm font-bold bg-[#00325f]"
         >
           <li>
@@ -300,6 +304,44 @@
                 {% endfor %}
             </div>
           </li>
+          <!-- Search -->
+          <li class="relative">
+            <button
+              @click="searchOpen = !searchOpen"
+              type="button"
+              class="nav-link px-4 py-6 flex items-center"
+              :aria-expanded="searchOpen"
+              aria-label="{% trans 'Search' %}"
+            >
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+            <div
+              x-show="searchOpen"
+              x-transition
+              @click.outside="searchOpen = false"
+              class="absolute right-0 top-full bg-white shadow-lg rounded-sm p-3 z-20"
+              x-cloak
+            >
+              <form action="{% url 'search' %}" method="get" role="search" class="flex">
+                <input
+                  type="search"
+                  name="q"
+                  value="{{ request.GET.q }}"
+                  placeholder="{% trans 'Search articles…' %}"
+                  class="w-56 border border-gray-300 rounded-l-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#00325f]"
+                  x-ref="navSearch"
+                  x-effect="searchOpen && $nextTick(() => $refs.navSearch.focus())"
+                />
+                <button type="submit" class="bg-[#00325f] text-white px-3 py-2 rounded-r-md hover:bg-blue-800" aria-label="{% trans 'Search' %}">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </li>
 {#          <li>#}
 {#            <a#}
 {#              href="{% url 'subscribe' %}"#}
@@ -335,6 +377,23 @@
               </form>
             </li>
 
+            <!-- Mobile search -->
+            <li class="border-b border-gray-200 py-2 px-4">
+              <form action="{% url 'search' %}" method="get" role="search" class="flex">
+                <input
+                  type="search"
+                  name="q"
+                  value="{{ request.GET.q }}"
+                  placeholder="{% trans 'Search articles…' %}"
+                  class="flex-1 border border-gray-300 rounded-l-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00325f]"
+                />
+                <button type="submit" class="bg-[#00325f] text-white px-3 py-2 rounded-r-md" aria-label="{% trans 'Search' %}">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </form>
+            </li>
             <li>
               <a href="{% url 'index' %}" class="block py-2 px-4{% if request.resolver_match.url_name == 'index' %} font-bold{% endif %}">{% trans "Journal Home" %}</a>
             </li>
