@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: CS Journal 1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-07-16 15:01+0000\n"
-"PO-Revision-Date: 2025-08-10 11:00+0000\n"
+"PO-Revision-Date: 2025-10-27 08:28+0000\n"
 "Last-Translator:   <admin@mail.com>\n"
 "Language-Team: English <en@li.org>\n"
 "Language: en\n"
@@ -97,11 +97,11 @@ msgstr "SUBMIT"
 
 #: templates/base.html:263 templates/base.html:354 templates/base.html:493
 msgid "Submission Guidelines"
-msgstr "Submission Guidelines"
+msgstr "To Authors"
 
 #: templates/base.html:268 templates/base.html:355 templates/base.html:498
 msgid "Permissions"
-msgstr "Permissions"
+msgstr "Article Requirements"
 
 #: templates/base.html:275 templates/base.html:361 templates/base.html:475
 msgid "About"
