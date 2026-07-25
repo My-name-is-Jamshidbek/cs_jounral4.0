@@ -41,6 +41,10 @@ class JournalIssue(models.Model):
     ], default='open_access')
     authors = models.CharField(max_length=200)
     file = models.FileField(upload_to='journal_issues/', blank=True, null=True)
+    doi = models.CharField(
+        max_length=100, blank=True, null=True, unique=True,
+        help_text="Crossref DOI, e.g. 10.64964/comp.2026.001. Leave blank until registered."
+    )
     publication_date = models.DateField()
     views = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

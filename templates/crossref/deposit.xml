@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doi_batch xmlns="http://www.crossref.org/schema/5.3.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.crossref.org/schema/5.3.1 http://www.crossref.org/schemas/crossref5.3.1.xsd"
+           version="5.3.1">
+  <head>
+    <doi_batch_id>{{ batch_id }}</doi_batch_id>
+    <timestamp>{{ timestamp }}</timestamp>
+    <depositor>
+      <depositor_name>{{ depositor_name }}</depositor_name>
+      <email_address>{{ depositor_email }}</email_address>
+    </depositor>
+    <registrant>{{ registrant }}</registrant>
+  </head>
+  <body>
+    {% for group in issue_groups %}
+    <journal>
+      <journal_metadata>
+        <full_title>{{ journal_title }}</full_title>
+        {% if issn %}<issn media_type="print">{{ issn }}</issn>{% endif %}
+      </journal_metadata>
+      <journal_issue>
+        <publication_date media_type="online">
+          <year>{{ group.issue.publication_date|date:"Y" }}</year>
+          <month>{{ group.issue.publication_date|date:"m" }}</month>
+          <day>{{ group.issue.publication_date|date:"d" }}</day>
+        </publication_date>
+        {% if group.issue.volume %}
+        <journal_volume>
+          <volume>{{ group.issue.volume }}</volume>
+        </journal_volume>
+        {% endif %}
+        {% if group.issue.issue_number %}<issue>{{ group.issue.issue_number }}</issue>{% endif %}
+      </journal_issue>
+      {% for article in group.articles %}
+      <journal_article publication_type="full_text">
+        <titles>
+          <title>{{ article.title }}</title>
+        </titles>
+        {% if article.authors_list %}
+        <contributors>
+          {% for author in article.authors_list %}
+          <person_name sequence="{% if forloop.first %}first{% else %}additional{% endif %}" contributor_role="author">
+            {% if author.given %}<given_name>{{ author.given }}</given_name>{% endif %}
+            <surname>{{ author.surname }}</surname>
+          </person_name>
+          {% endfor %}
+        </contributors>
+        {% endif %}
+        <publication_date media_type="online">
+          <year>{{ article.publication_date|date:"Y" }}</year>
+          <month>{{ article.publication_date|date:"m" }}</month>
+          <day>{{ article.publication_date|date:"d" }}</day>
+        </publication_date>
+        <doi_data>
+          <doi>{{ article.doi }}</doi>
+          <resource>{{ article.absolute_url }}</resource>
+        </doi_data>
+      </journal_article>
+      {% endfor %}
+    </journal>
+    {% endfor %}
+  </body>
+</doi_batch>

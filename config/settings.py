@@ -10,10 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 import config.rosetta_reload_patch
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -50,6 +54,7 @@ INSTALLED_APPS = [
     'issue.apps.IssueConfig',
     'submit.apps.SubmitConfig',
     'subscribe.apps.SubscribeConfig',
+    'crossref.apps.CrossrefConfig',
 ]
 
 MIDDLEWARE = [
@@ -205,3 +210,18 @@ CKEDITOR_CONFIGS = {
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Crossref DOI deposit credentials (kept out of source control — set in .env)
+# See .env.example for the expected variable names.
+CROSSREF_USERNAME = os.environ.get("CROSSREF_USERNAME", "")
+CROSSREF_PASSWORD = os.environ.get("CROSSREF_PASSWORD", "")
+CROSSREF_DEPOSIT_EMAIL = os.environ.get("CROSSREF_DEPOSIT_EMAIL", "")
+
+# "sandbox" (test.crossref.org) or "production" (doi.crossref.org).
+# Anything unrecognised falls back to sandbox — a registered DOI is permanent,
+# so production must be opted into explicitly.
+CROSSREF_ENVIRONMENT = os.environ.get("CROSSREF_ENVIRONMENT", "sandbox")
+
+# Public base URL used to build the DOI landing-page links sent to Crossref.
+# Cron has no HttpRequest, so this cannot be derived from the request.
+SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "https://jurnal-komparativistika.uz")

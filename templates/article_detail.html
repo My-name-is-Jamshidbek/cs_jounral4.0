@@ -17,6 +17,7 @@
   {% if article.issue_number %}<meta name="citation_issue" content="{{ article.issue_number }}" />{% endif %}
   {% if site_config.issn_print %}<meta name="citation_issn" content="{{ site_config.issn_print }}" />{% endif %}
   {% if site_config.issn_online %}<meta name="citation_issn" content="{{ site_config.issn_online }}" />{% endif %}
+  {% if article.doi %}<meta name="citation_doi" content="{{ article.doi }}" />{% endif %}
   {% if article.file %}<meta name="citation_pdf_url" content="{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}" />{% endif %}
   <meta name="citation_language" content="{{ LANGUAGE_CODE }}" />
   {% if article.description %}<meta name="citation_abstract" content="{{ article.description|striptags|truncatechars:500 }}" />{% endif %}
@@ -43,7 +44,9 @@
     "volumeNumber": "{{ article.volume }}"{% endif %}{% if article.issue_number %},
     "issueNumber": "{{ article.issue_number }}"{% endif %}{% if article.description %},
     "description": "{{ article.description|striptags|truncatechars:400|escapejs }}"{% endif %}{% if article.citation_count %},
-    "citationCount": {{ article.citation_count }}{% endif %}{% if article.scholar_cluster_id %},
+    "citationCount": {{ article.citation_count }}{% endif %}{% if article.doi and article.scholar_cluster_id %},
+    "identifier": [{"@type": "PropertyValue", "propertyID": "DOI", "value": "{{ article.doi }}"}, "gs:{{ article.scholar_cluster_id }}"]{% elif article.doi %},
+    "identifier": {"@type": "PropertyValue", "propertyID": "DOI", "value": "{{ article.doi }}"}{% elif article.scholar_cluster_id %},
     "identifier": "gs:{{ article.scholar_cluster_id }}"{% endif %}{% if article.file %},
     "encoding": {"@type": "MediaObject", "contentUrl": "{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}", "fileFormat": "application/pdf"}{% endif %},
     "publisher": {"@type": "Organization", "name": "{{ publisher|default:site_title|escapejs }}"}
@@ -92,6 +95,7 @@
   <aside class="bg-white border rounded p-4 text-xs text-gray-600 space-y-2">
     <h2 class="font-semibold text-gray-800 text-sm mb-2">{% trans 'Article Metadata' %}</h2>
     <p><strong>{% trans 'Permanent URL' %}:</strong> <a href="{{ absolute_url }}" class="text-blue-700 break-all">{{ absolute_url }}</a></p>
+    {% if article.doi %}<p><strong>DOI:</strong> <a href="https://doi.org/{{ article.doi }}" target="_blank" class="text-blue-700 break-all">https://doi.org/{{ article.doi }}</a></p>{% endif %}
     {% if site_config.issn_print %}<p><strong>{% trans 'Print ISSN' %}:</strong> {{ site_config.issn_print }}</p>{% endif %}
     {% if site_config.issn_online %}<p><strong>{% trans 'Online ISSN' %}:</strong> {{ site_config.issn_online }}</p>{% endif %}
     {% if article.last_scholar_sync %}<p><strong>{% trans 'Last Scholar Sync' %}:</strong> {{ article.last_scholar_sync|date:'Y-m-d H:i' }}</p>{% endif %}

@@ -93,6 +93,14 @@ class Command(BaseCommand):
             {
                 'name': 'society_name',
                 'value': 'British Comparative Literature Association (BCLA)'
+            },
+            {
+                'name': 'doi_prefix',
+                'value': '10.64964'
+            },
+            {
+                'name': 'crossref_registrant',
+                'value': 'Uzbekistan State World Languages University'
             }
         ]
 

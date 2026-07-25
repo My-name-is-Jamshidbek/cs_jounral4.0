@@ -1,0 +1,252 @@
+"""
+Crossref deposit helpers.
+
+Nothing in here talks to Crossref on its own — `submit_batch` is only ever
+called from the admin approval action, never from the cron command.
+"""
+
+import re
+import uuid
+import xml.etree.ElementTree as ET
+from urllib.parse import urlparse
+
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.html import strip_tags
+
+from core.models import Default
+
+DEPOSIT_PATH = '/servlet/deposit'
+RESULT_PATH = '/servlet/submissionDownload'
+
+BASE_URLS = {
+    'sandbox': 'https://test.crossref.org',
+    'production': 'https://doi.crossref.org',
+}
+
+# Landing pages Crossref could never resolve; refuse to deposit these.
+UNREACHABLE_HOSTS = {'localhost', '127.0.0.1', '0.0.0.0', '::1', 'testserver'}
+
+
+class CrossrefError(Exception):
+    """Raised when a deposit cannot be built or sent."""
+
+
+def get_site_config():
+    return {d.name: d.value for d in Default.objects.all()}
+
+
+def get_environment():
+    env = (getattr(settings, 'CROSSREF_ENVIRONMENT', '') or 'sandbox').lower()
+    return env if env in BASE_URLS else 'sandbox'
+
+
+def get_base_url(environment=None):
+    return BASE_URLS[environment or get_environment()]
+
+
+def get_credentials():
+    user = getattr(settings, 'CROSSREF_USERNAME', '') or ''
+    password = getattr(settings, 'CROSSREF_PASSWORD', '') or ''
+    if not user or not password:
+        raise CrossrefError(
+            "CROSSREF_USERNAME / CROSSREF_PASSWORD are not set. Add them to .env "
+            "(see .env.example) and restart the server."
+        )
+    return user, password
+
+
+def get_doi_prefix(site_config=None):
+    site_config = site_config if site_config is not None else get_site_config()
+    prefix = strip_tags(site_config.get('doi_prefix', '') or '').strip()
+    prefix = prefix or (getattr(settings, 'CROSSREF_DOI_PREFIX', '') or '').strip()
+    if not prefix:
+        raise CrossrefError(
+            "No DOI prefix configured. Add a 'doi_prefix' row in Default Settings "
+            "(e.g. 10.64964)."
+        )
+    if not prefix.startswith('10.'):
+        raise CrossrefError(f"DOI prefix {prefix!r} does not look like a Crossref prefix (10.xxxxx).")
+    return prefix
+
+
+def get_site_base_url():
+    base = (getattr(settings, 'SITE_BASE_URL', '') or '').strip().rstrip('/')
+    if not base:
+        raise CrossrefError("SITE_BASE_URL is not set. Add it to .env (see .env.example).")
+    host = (urlparse(base).hostname or '').lower()
+    if host in UNREACHABLE_HOSTS:
+        raise CrossrefError(
+            f"SITE_BASE_URL points at {host!r}. Crossref must be able to reach the landing "
+            "page from the public internet — set it to the live domain."
+        )
+    return base
+
+
+def build_resource_url(article, base_url=None):
+    return f"{base_url or get_site_base_url()}{article.get_absolute_url()}"
+
+
+def build_doi(article, prefix, taken):
+    """
+    Mint a stable DOI for an article: <prefix>/comp.<year>.<zero-padded id>.
+
+    `taken` is the set of DOIs already in use (existing articles + DOIs proposed
+    earlier in this same run); a collision gets a -2, -3, … suffix.
+    """
+    year = article.publication_date.year if article.publication_date else timezone.now().year
+    candidate = f"{prefix}/comp.{year}.{article.pk:04d}"
+    if candidate not in taken:
+        return candidate
+    n = 2
+    while f"{candidate}-{n}" in taken:
+        n += 1
+    return f"{candidate}-{n}"
+
+
+def split_authors(raw):
+    """Best-effort split of a free-text authors string into given/surname pairs."""
+    if not raw:
+        return []
+    names = [n.strip() for n in raw.replace(';', ',').split(',') if n.strip()]
+    result = []
+    for name in names:
+        bits = name.split()
+        if len(bits) >= 2:
+            result.append({'given': ' '.join(bits[:-1]), 'surname': bits[-1]})
+        else:
+            result.append({'given': '', 'surname': name})
+    return result
+
+
+def make_batch_id():
+    return f"{timezone.now():%Y%m%d%H%M%S}-{uuid.uuid4().hex[:8]}"
+
+
+def build_deposit_xml(entries, batch_id=None, site_config=None):
+    """
+    Render the Crossref deposit XML.
+
+    `entries` is a list of (article, doi, resource_url) tuples. Articles are
+    grouped by their parent Issue, which is what the Crossref schema expects.
+    """
+    site_config = site_config if site_config is not None else get_site_config()
+
+    groups, order = {}, []
+    for article, doi, resource_url in entries:
+        if article.issue_id not in groups:
+            groups[article.issue_id] = {'issue': article.issue, 'articles': []}
+            order.append(article.issue_id)
+        groups[article.issue_id]['articles'].append({
+            'title': strip_tags(article.title),
+            'doi': doi,
+            'publication_date': article.publication_date,
+            'absolute_url': resource_url,
+            'authors_list': split_authors(article.authors),
+        })
+
+    context = {
+        'batch_id': batch_id or make_batch_id(),
+        'timestamp': f"{timezone.now():%Y%m%d%H%M%S}",
+        'depositor_name': site_config.get('editor_in_chief') or site_config.get('publisher') or 'Journal Editor',
+        'depositor_email': (
+            getattr(settings, 'CROSSREF_DEPOSIT_EMAIL', '')
+            or site_config.get('contact_email')
+            or 'editor@example.com'
+        ),
+        'registrant': (
+            site_config.get('crossref_registrant') or site_config.get('publisher')
+            or site_config.get('site_title') or 'Journal Publisher'
+        ),
+        'journal_title': strip_tags(site_config.get('site_title', 'Journal')),
+        'issn': site_config.get('issn_print') or site_config.get('issn_online') or '',
+        'issue_groups': [groups[k] for k in order],
+    }
+    return render_to_string('crossref/deposit.xml', context)
+
+
+def submit_batch(batch, timeout=60):
+    """
+    POST a batch to Crossref. Returns (ok, message) and never raises on a
+    network error — the caller records the message on the batch instead.
+    """
+    import requests
+
+    try:
+        user, password = get_credentials()
+    except CrossrefError as exc:
+        return False, str(exc)
+
+    url = f"{get_base_url(batch.environment)}{DEPOSIT_PATH}"
+    try:
+        response = requests.post(
+            url,
+            data={'operation': 'doMDUpload', 'login_id': user, 'login_passwd': password},
+            files={'fname': (f"{batch.batch_id}.xml", batch.xml.encode('utf-8'), 'application/xml')},
+            timeout=timeout,
+        )
+    except Exception as exc:
+        return False, f"Network error contacting {url}: {exc}"
+
+    body = (response.text or '').strip()
+    snippet = body[:2000]
+    if response.status_code != 200:
+        return False, f"HTTP {response.status_code} from Crossref: {snippet}"
+    if re.search(r'\berror\b', body, re.IGNORECASE) and 'SUCCESS' not in body.upper():
+        return False, f"Crossref rejected the submission: {snippet}"
+    return True, f"Submitted to {url}. Response: {snippet}"
+
+
+def check_batch(batch, timeout=60):
+    """
+    Poll Crossref for a submitted batch's result.
+
+    Returns (state, message) where state is one of 'registered', 'failed',
+    'pending' (still processing) or 'unknown'.
+    """
+    import requests
+
+    try:
+        user, password = get_credentials()
+    except CrossrefError as exc:
+        return 'unknown', str(exc)
+
+    url = f"{get_base_url(batch.environment)}{RESULT_PATH}"
+    try:
+        response = requests.get(
+            url,
+            params={'usr': user, 'pwd': password, 'doi_batch_id': batch.batch_id, 'type': 'result'},
+            timeout=timeout,
+        )
+    except Exception as exc:
+        return 'unknown', f"Network error contacting {url}: {exc}"
+
+    body = (response.text or '').strip()
+    if response.status_code != 200:
+        return 'unknown', f"HTTP {response.status_code}: {body[:1000]}"
+    if not body or 'not found' in body.lower():
+        return 'pending', "Crossref has no result for this batch yet."
+
+    try:
+        root = ET.fromstring(body)
+    except ET.ParseError:
+        return 'unknown', f"Could not parse Crossref response: {body[:1000]}"
+
+    success = failure = 0
+    for node in root.iter():
+        tag = node.tag.rsplit('}', 1)[-1]
+        if tag == 'batch_data':
+            success = int(node.findtext('.//{*}success_count') or 0)
+            failure = int(node.findtext('.//{*}failure_count') or 0)
+        elif tag == 'record_diagnostic':
+            if (node.get('status') or '').lower() == 'success':
+                success += 1
+            elif (node.get('status') or '').lower() in ('failure', 'error'):
+                failure += 1
+
+    if failure:
+        return 'failed', f"{failure} record(s) failed, {success} succeeded. Response: {body[:2000]}"
+    if success:
+        return 'registered', f"{success} record(s) registered. Response: {body[:2000]}"
+    return 'pending', f"No counts in response yet: {body[:1000]}"
