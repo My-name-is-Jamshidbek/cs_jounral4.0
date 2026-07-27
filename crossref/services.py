@@ -203,7 +203,13 @@ def split_authors(raw, surname_first=None):
 
     if not raw:
         return []
-    names = [n.strip() for n in clean_value(raw).replace(';', ',').split(',') if n.strip()]
+    # Authors are hand-entered and separated inconsistently — commas, semicolons
+    # and line breaks all occur. Missing a separator silently merges several
+    # people into one name, which Crossref rejects for exceeding 60 characters.
+    text = clean_value(raw)
+    for separator in (';', '\r\n', '\n', '\r', '\t'):
+        text = text.replace(separator, ',')
+    names = [n.strip() for n in text.split(',') if n.strip()]
     result = []
     for name in names:
         bits = name.split()
@@ -217,6 +223,33 @@ def split_authors(raw, surname_first=None):
         else:
             result.append({'given': ' '.join(bits[:-1]), 'surname': bits[-1]})
     return result
+
+
+# Crossref's schema caps given_name and surname at 60 characters each.
+MAX_NAME_LENGTH = 60
+
+
+def author_problems(raw):
+    """
+    Return reasons this author string cannot be deposited, empty list if fine.
+
+    Crossref validates the whole submission as one document, so a single
+    malformed name rejects every article in the batch. Catching it at queue
+    time costs nothing; catching it after a deposit costs a full round trip.
+    """
+    authors = split_authors(raw)
+    if not authors:
+        return ["no authors"]
+    problems = []
+    for author in authors:
+        for field in ('surname', 'given'):
+            value = author[field]
+            if len(value) > MAX_NAME_LENGTH:
+                problems.append(
+                    f"{field} is {len(value)} characters, over Crossref's {MAX_NAME_LENGTH} limit "
+                    f"({value[:50]}…) — most likely several authors without a comma between them"
+                )
+    return problems
 
 
 def make_batch_id():

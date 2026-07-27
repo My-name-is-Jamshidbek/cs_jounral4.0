@@ -13,9 +13,9 @@ from django.db.models import Q
 from crossref.console import force_utf8
 from crossref.models import DepositBatch, DepositItem
 from crossref.services import (
-    CrossrefError, article_title, build_deposit_xml, build_doi, build_resource_url,
-    get_doi_prefix, get_environment, get_site_base_url, get_site_config, make_batch_id,
-    split_authors,
+    CrossrefError, article_title, author_problems, build_deposit_xml, build_doi,
+    build_resource_url, get_doi_prefix, get_environment, get_site_base_url,
+    get_site_config, make_batch_id,
 )
 from issue.models import JournalIssue
 
@@ -91,8 +91,9 @@ class Command(BaseCommand):
             if not article_title(article):
                 skipped.append((article, "no title in any language"))
                 continue
-            if not article.authors or not split_authors(article.authors):
-                skipped.append((article, "no authors"))
+            problems = author_problems(article.authors)
+            if problems:
+                skipped.append((article, '; '.join(problems)))
                 continue
             doi = build_doi(article, prefix, taken)
             taken.add(doi)
