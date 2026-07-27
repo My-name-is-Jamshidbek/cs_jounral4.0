@@ -17,7 +17,8 @@
     <journal>
       <journal_metadata>
         <full_title>{{ journal_title }}</full_title>
-        <issn media_type="{{ issn_media_type|default:'print' }}">{{ issn }}</issn>
+        {% for issn, media_type in issns %}<issn media_type="{{ media_type }}">{{ issn }}</issn>
+        {% endfor %}
       </journal_metadata>
       <journal_issue>
         <publication_date media_type="online">

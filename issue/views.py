@@ -6,6 +6,7 @@ import json
 from django.utils.datetime_safe import datetime
 from django.db.models import F, Q
 
+from crossref.services import split_authors
 from issue.models import Issue, JournalIssue
 
 
@@ -138,11 +139,19 @@ def article_detail(request, pk):
     JournalIssue.objects.filter(pk=pk).update(views=F('views') + 1)
     article.refresh_from_db(fields=['views'])
     authors_list = [a.strip() for a in (article.authors or '').replace(';', ',').split(',') if a.strip()]
+    # Google Scholar parses one citation_author tag per author and understands
+    # "Surname, Given". Without the comma it guesses, and guesses wrong on
+    # surname-first Uzbek names like "Axmedova Aziza Komilovna".
+    authors_citation = [
+        f"{a['surname']}, {a['given']}" if a['given'] else a['surname']
+        for a in split_authors(article.authors)
+    ]
     absolute_url = request.build_absolute_uri(article.get_absolute_url())
     context = {
         'article': article,
         'issue_obj': article.issue,
         'authors_list': authors_list,
+        'authors_citation': authors_citation,
         'absolute_url': absolute_url,
     }
     return render(request, 'article_detail.html', context)

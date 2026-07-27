@@ -8,15 +8,15 @@
   <link rel="canonical" href="{{ absolute_url }}" />
   <meta name="robots" content="index,follow" />
   <meta name="citation_title" content="{{ article.title|striptags }}" />
-  {% for author in authors_list %}
+  {% for author in authors_citation %}
     <meta name="citation_author" content="{{ author }}" />
   {% endfor %}
   <meta name="citation_publication_date" content="{{ article.publication_date|date:'Y/m/d' }}" />
-  <meta name="citation_journal_title" content="{{ site_title|striptags }}" />
+  <meta name="citation_journal_title" content="{{ journal_title_plain|default:site_title|striptags }}" />
   {% if article.volume %}<meta name="citation_volume" content="{{ article.volume }}" />{% endif %}
   {% if article.issue_number %}<meta name="citation_issue" content="{{ article.issue_number }}" />{% endif %}
-  {% if site_config.issn_print %}<meta name="citation_issn" content="{{ site_config.issn_print }}" />{% endif %}
-  {% if site_config.issn_online %}<meta name="citation_issn" content="{{ site_config.issn_online }}" />{% endif %}
+  {% if issn_print %}<meta name="citation_issn" content="{{ issn_print }}" />{% endif %}
+  {% if issn_online and issn_online != issn_print %}<meta name="citation_issn" content="{{ issn_online }}" />{% endif %}
   {% if article.doi %}<meta name="citation_doi" content="{{ article.doi }}" />{% endif %}
   {% if article.file %}<meta name="citation_pdf_url" content="{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}" />{% endif %}
   <meta name="citation_language" content="{{ LANGUAGE_CODE }}" />
@@ -34,9 +34,9 @@
     "inLanguage": "{{ LANGUAGE_CODE }}",
     "isPartOf": {
       "@type": "Periodical",
-      "name": "{{ site_title|striptags|escapejs }}"{% if site_config.issn_print %},
-      "issn": "{{ site_config.issn_print }}"{% elif site_config.issn_online %},
-      "issn": "{{ site_config.issn_online }}"{% endif %}
+      "name": "{{ journal_title_plain|default:site_title|striptags|escapejs }}"{% if issn_print %},
+      "issn": "{{ issn_print }}"{% elif issn_online %},
+      "issn": "{{ issn_online }}"{% endif %}
     },
     "author": [
       {% for a in authors_list %}{"@type": "Person", "name": "{{ a|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}

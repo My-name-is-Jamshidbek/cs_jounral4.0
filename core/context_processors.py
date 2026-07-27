@@ -1,5 +1,5 @@
 from about.models import About
-from core.models import Default
+from core.site_config import clean_value, extract_issn, load_site_config
 from django.utils.html import strip_tags
 
 
@@ -21,9 +21,9 @@ def site_context(request):
 
     # Get site configuration from Default model
     try:
-        # Load all defaults into a dictionary for easy access - optimized query
-        defaults_queryset = Default.objects.all().select_related()
-        site_config = {default.name: default.value for default in defaults_queryset}
+        # Values keep their CKEditor markup here: several templates render them
+        # as rich text. Metadata callers use the cleaned copies added below.
+        site_config = load_site_config()
 
         context['site_config'] = site_config
 
@@ -42,9 +42,13 @@ def site_context(request):
         context['contact_email'] = site_config.get('contact_email', 'journals@eup.ed.ac.uk')
         context['submission_email'] = site_config.get('submission_email', site_config.get('contact_email', 'journals@eup.ed.ac.uk'))
 
-        # Journal metadata
-        context['issn_print'] = site_config.get('issn_print', '1744-1854')
-        context['issn_online'] = site_config.get('issn_online', '1750-0109')
+        # Journal metadata. No fallback for ISSN or journal title: these end up
+        # in citation_* meta tags, and a placeholder from another journal is far
+        # worse than an absent tag — Google Scholar would index this journal
+        # under someone else's ISSN.
+        context['issn_print'] = extract_issn(site_config.get('issn_print', ''))
+        context['issn_online'] = extract_issn(site_config.get('issn_online', ''))
+        context['journal_title_plain'] = clean_value(site_config.get('site_title', ''))
         context['current_volume'] = site_config.get('current_volume', '21')
         context['publication_frequency'] = site_config.get('publication_frequency', '3 issues per year')
 
@@ -80,8 +84,9 @@ def site_context(request):
         context['publisher'] = 'Edinburgh University Press'
         context['contact_email'] = 'journals@eup.ed.ac.uk'
         context['submission_email'] = 'journals@eup.ed.ac.uk'
-        context['issn_print'] = '1744-1854'
-        context['issn_online'] = '1750-0109'
+        context['issn_print'] = ''
+        context['issn_online'] = ''
+        context['journal_title_plain'] = 'Comparative Critical Studies'
         context['current_volume'] = '21'
         context['publication_frequency'] = '3 issues per year'
         context['society_name'] = 'British Comparative Literature Association (BCLA)'

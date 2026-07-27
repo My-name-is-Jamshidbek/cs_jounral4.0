@@ -5,7 +5,6 @@ Nothing in here talks to Crossref on its own — `submit_batch` is only ever
 called from the admin approval action, never from the cron command.
 """
 
-import html
 import re
 import uuid
 import xml.etree.ElementTree as ET
@@ -14,9 +13,8 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.html import strip_tags
 
-from core.models import Default
+from core.site_config import ISSN_RE, clean_value, load_site_config
 
 DEPOSIT_PATH = '/servlet/deposit'
 RESULT_PATH = '/servlet/submissionDownload'
@@ -30,49 +28,14 @@ BASE_URLS = {
 UNREACHABLE_HOSTS = {'localhost', '127.0.0.1', '0.0.0.0', '::1', 'testserver'}
 
 EMAIL_RE = re.compile(r'[\w.+-]+@[\w-]+\.[\w.-]+')
-ISSN_RE = re.compile(r'\d{4}-\d{3}[\dXx]')
 
 
 class CrossrefError(Exception):
     """Raised when a deposit cannot be built or sent."""
 
 
-def clean_value(raw):
-    """
-    Flatten a Default setting into plain text.
-
-    Default.value is a CKEditor RichTextField, so every setting arrives wrapped
-    in markup ("<p>O&#39;zbekiston …</p>"). Deposited metadata must be plain
-    text, so drop the tags and decode the entities CKEditor left behind.
-    """
-    text = html.unescape(strip_tags(raw or ''))
-    return text.replace('\xa0', ' ').strip()
-
-
-def config_key(row):
-    """
-    Read a Default row's key regardless of which language tab it was typed into.
-
-    Default.name is registered with modeltranslation, so `row.name` resolves to
-    the active language and comes back empty for a row whose Uzbek tab was left
-    blank. A settings key is not really translatable content, so fall back
-    across the language columns rather than losing the row.
-    """
-    fields = ['name'] + [f'name_{code}' for code, _ in settings.LANGUAGES]
-    for field in fields:
-        key = clean_value(getattr(row, field, '') or '')
-        if key:
-            return key
-    return ''
-
-
 def get_site_config():
-    config = {}
-    for row in Default.objects.all():
-        key = config_key(row)
-        if key:
-            config[key] = clean_value(row.value)
-    return config
+    return load_site_config(clean=True)
 
 
 def get_environment():
@@ -143,16 +106,43 @@ def get_depositor_email(site_config):
     )
 
 
-def get_issn(site_config):
-    """Return (issn, media_type). Crossref rejects journal deposits without one."""
-    for key, media_type in (('issn_online', 'electronic'), ('issn_print', 'print')):
-        match = ISSN_RE.search(site_config.get(key, ''))
-        if match:
-            return match.group(0).upper(), media_type
-    raise CrossrefError(
-        "No ISSN configured. Crossref requires an ISSN for journal deposits — add "
-        "an 'issn_print' or 'issn_online' row in Default Settings (format 1234-5678)."
-    )
+PRINT_WORDS = ('print', 'bosma', 'печат')
+ONLINE_WORDS = ('online', 'electronic', 'elektron', 'onlayn', 'электрон')
+
+
+def get_issns(site_config):
+    """
+    Return [(issn, media_type), …] for the journal. Crossref rejects journal
+    deposits with no ISSN at all, and accepts one element per media type.
+
+    The setting *name* is only a hint. A journal with a single print ISSN often
+    has it entered under both keys, with the text itself saying "Print ISSN:
+    3060-4559" — so when the value says which kind it is, believe the value.
+    Identical numbers are collapsed, otherwise Crossref sees the same ISSN
+    declared as two different media types.
+    """
+    found = {}
+    for key, default_media_type in (('issn_print', 'print'), ('issn_online', 'electronic')):
+        raw = site_config.get(key, '')
+        match = ISSN_RE.search(raw)
+        if not match:
+            continue
+        lowered = raw.lower()
+        if any(word in lowered for word in PRINT_WORDS):
+            media_type = 'print'
+        elif any(word in lowered for word in ONLINE_WORDS):
+            media_type = 'electronic'
+        else:
+            media_type = default_media_type
+        # First writer wins, so an explicit label is not overwritten by a guess.
+        found.setdefault(match.group(0).upper(), media_type)
+
+    if not found:
+        raise CrossrefError(
+            "No ISSN configured. Crossref requires an ISSN for journal deposits — add "
+            "an 'issn_print' or 'issn_online' row in Default Settings (format 1234-5678)."
+        )
+    return sorted(found.items())
 
 
 def build_resource_url(article, base_url=None):
@@ -234,8 +224,8 @@ def build_deposit_xml(entries, batch_id=None, site_config=None):
             'authors_list': split_authors(article.authors),
         })
 
-    issn, issn_media_type = get_issn(site_config)
     context = {
+        'issns': get_issns(site_config),
         'batch_id': batch_id or make_batch_id(),
         'timestamp': f"{timezone.now():%Y%m%d%H%M%S}",
         'depositor_name': (
@@ -248,8 +238,6 @@ def build_deposit_xml(entries, batch_id=None, site_config=None):
             or site_config.get('site_title') or 'Journal Publisher'
         ),
         'journal_title': site_config.get('site_title') or 'Journal',
-        'issn': issn,
-        'issn_media_type': issn_media_type,
         'issue_groups': [groups[k] for k in order],
     }
     return render_to_string('crossref/deposit.xml', context)
