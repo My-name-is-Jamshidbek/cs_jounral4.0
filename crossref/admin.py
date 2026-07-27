@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as ET
+
 from django.contrib import admin, messages
 from django.db import transaction
 from django.http import HttpResponse
@@ -157,6 +159,24 @@ class DepositBatchAdmin(admin.ModelAdmin):
         )
         if clash:
             return f"proposed DOI(s) already used by other articles: {', '.join(clash)}."
+
+        # The XML is frozen at queue time but the items are not: deleting an
+        # article cascades its item away and leaves the DOI stranded in the XML,
+        # which would register a DOI resolving to a deleted page.
+        try:
+            root = ET.fromstring(batch.xml)
+        except ET.ParseError as exc:
+            return f"stored XML is not parseable ({exc}). Cancel this batch and re-run queue_doi_deposits."
+        # iterfind, not iter: the {*} namespace wildcard is an ElementPath
+        # feature and iter() would match nothing at all here.
+        in_xml = {node.text.strip() for node in root.iterfind('.//{*}doi') if node.text}
+        if in_xml != set(proposed):
+            orphaned = in_xml - set(proposed)
+            detail = f" Stale entries: {', '.join(sorted(orphaned))}." if orphaned else ''
+            return (
+                "the XML no longer matches this batch's articles — it was rendered before the "
+                f"articles changed.{detail} Cancel this batch and re-run queue_doi_deposits."
+            )
         return None
 
 
