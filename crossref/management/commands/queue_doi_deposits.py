@@ -13,8 +13,9 @@ from django.db.models import Q
 from crossref.console import force_utf8
 from crossref.models import DepositBatch, DepositItem
 from crossref.services import (
-    CrossrefError, build_deposit_xml, build_doi, build_resource_url,
+    CrossrefError, article_title, build_deposit_xml, build_doi, build_resource_url,
     get_doi_prefix, get_environment, get_site_base_url, get_site_config, make_batch_id,
+    split_authors,
 )
 from issue.models import JournalIssue
 
@@ -85,12 +86,21 @@ class Command(BaseCommand):
             if not article.publication_date:
                 skipped.append((article, "no publication date"))
                 continue
+            # Crossref rejects an empty <title>, and a DOI is permanent — better
+            # to leave the article un-deposited than to register it untitled.
+            if not article_title(article):
+                skipped.append((article, "no title in any language"))
+                continue
+            if not article.authors or not split_authors(article.authors):
+                skipped.append((article, "no authors"))
+                continue
             doi = build_doi(article, prefix, taken)
             taken.add(doi)
             entries.append((article, doi, build_resource_url(article, base_url)))
 
         for article, reason in skipped:
-            self.stdout.write(self.style.WARNING(f"  skipped #{article.pk} {article.title[:60]} — {reason}"))
+            label = article_title(article) or '(untitled)'
+            self.stdout.write(self.style.WARNING(f"  skipped #{article.pk} {label[:60]} - {reason}"))
 
         if not entries:
             self.stdout.write("Nothing queueable after filtering. Nothing queued.")

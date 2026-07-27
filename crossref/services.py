@@ -166,6 +166,28 @@ def build_doi(article, prefix, taken):
     return f"{candidate}-{n}"
 
 
+def article_title(article):
+    """
+    Resolve an article's title without depending on the active language.
+
+    `article.title` is a modeltranslation field, so it returns whatever language
+    happens to be active — the cron process and the admin see different values,
+    and an article with no Uzbek translation reads back empty. Walk the language
+    columns in a fixed order so a deposit is reproducible.
+    """
+    codes = [settings.LANGUAGE_CODE] + [c for c, _ in settings.LANGUAGES if c != settings.LANGUAGE_CODE]
+    for code in codes:
+        title = clean_value(getattr(article, f'title_{code}', '') or '')
+        if title:
+            return title
+    return clean_value(getattr(article, 'title', '') or '')
+
+
+# Stripped before splitting: an honorific is not a surname, and surname-first
+# splitting would otherwise deposit "Dr." as the author's family name.
+HONORIFICS = {'dr', 'prof', 'mr', 'mrs', 'ms', 'phd', 'assoc', 'akad', 'prof.dr'}
+
+
 def split_authors(raw, surname_first=None):
     """
     Split a free-text authors string into given/surname pairs.
@@ -185,6 +207,9 @@ def split_authors(raw, surname_first=None):
     result = []
     for name in names:
         bits = name.split()
+        while len(bits) > 1 and bits[0].lower().strip('.') in HONORIFICS:
+            bits = bits[1:]
+        name = ' '.join(bits)
         if len(bits) < 2:
             result.append({'given': '', 'surname': name})
         elif surname_first:
@@ -217,7 +242,7 @@ def build_deposit_xml(entries, batch_id=None, site_config=None):
             groups[article.issue_id] = {'issue': article.issue, 'articles': []}
             order.append(article.issue_id)
         groups[article.issue_id]['articles'].append({
-            'title': clean_value(article.title),
+            'title': article_title(article),
             'doi': doi,
             'publication_date': article.publication_date,
             'absolute_url': resource_url,
