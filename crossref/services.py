@@ -49,8 +49,30 @@ def clean_value(raw):
     return text.replace('\xa0', ' ').strip()
 
 
+def config_key(row):
+    """
+    Read a Default row's key regardless of which language tab it was typed into.
+
+    Default.name is registered with modeltranslation, so `row.name` resolves to
+    the active language and comes back empty for a row whose Uzbek tab was left
+    blank. A settings key is not really translatable content, so fall back
+    across the language columns rather than losing the row.
+    """
+    fields = ['name'] + [f'name_{code}' for code, _ in settings.LANGUAGES]
+    for field in fields:
+        key = clean_value(getattr(row, field, '') or '')
+        if key:
+            return key
+    return ''
+
+
 def get_site_config():
-    return {d.name: clean_value(d.value) for d in Default.objects.all()}
+    config = {}
+    for row in Default.objects.all():
+        key = config_key(row)
+        if key:
+            config[key] = clean_value(row.value)
+    return config
 
 
 def get_environment():
