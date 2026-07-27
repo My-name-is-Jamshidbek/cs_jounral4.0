@@ -21,10 +21,14 @@
         {% endfor %}
       </journal_metadata>
       <journal_issue>
+        {% comment %}
+          Crossref's publication_date is a sequence of (month?, day?, year) —
+          year last. Any other order fails schema validation.
+        {% endcomment %}
         <publication_date media_type="online">
-          <year>{{ group.issue.publication_date|date:"Y" }}</year>
           <month>{{ group.issue.publication_date|date:"m" }}</month>
           <day>{{ group.issue.publication_date|date:"d" }}</day>
+          <year>{{ group.issue.publication_date|date:"Y" }}</year>
         </publication_date>
         {% if group.issue.volume %}
         <journal_volume>
@@ -49,9 +53,9 @@
         </contributors>
         {% endif %}
         <publication_date media_type="online">
-          <year>{{ article.publication_date|date:"Y" }}</year>
           <month>{{ article.publication_date|date:"m" }}</month>
           <day>{{ article.publication_date|date:"d" }}</day>
+          <year>{{ article.publication_date|date:"Y" }}</year>
         </publication_date>
         <doi_data>
           <doi>{{ article.doi }}</doi>
