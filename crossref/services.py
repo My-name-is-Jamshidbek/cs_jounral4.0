@@ -315,20 +315,39 @@ def check_batch(batch, timeout=60):
         return 'unknown', str(exc)
 
     url = f"{get_base_url(batch.environment)}{RESULT_PATH}"
-    try:
-        response = requests.get(
-            url,
-            params={'usr': user, 'pwd': password, 'doi_batch_id': batch.batch_id, 'type': 'result'},
-            timeout=timeout,
-        )
-    except Exception as exc:
-        return 'unknown', f"Network error contacting {url}: {exc}"
+    # Crossref indexes a submission both by the doi_batch_id in the XML head and
+    # by the name of the uploaded file. Which one resolves depends on how far
+    # the submission has got through their queue, so try both before concluding
+    # the batch is still pending.
+    lookups = [
+        {'doi_batch_id': batch.batch_id},
+        {'file_name': f"{batch.batch_id}.xml"},
+    ]
+    body = ''
+    for lookup in lookups:
+        try:
+            response = requests.get(
+                url,
+                params={'usr': user, 'pwd': password, 'type': 'result', **lookup},
+                timeout=timeout,
+            )
+        except Exception as exc:
+            return 'unknown', f"Network error contacting {url}: {exc}"
 
-    body = (response.text or '').strip()
-    if response.status_code != 200:
-        return 'unknown', f"HTTP {response.status_code}: {body[:1000]}"
+        body = (response.text or '').strip()
+        if response.status_code != 200:
+            return 'unknown', f"HTTP {response.status_code}: {body[:1000]}"
+        if body and 'unknown_submission' not in body:
+            break
+
     if not body or 'not found' in body.lower():
         return 'pending', "Crossref has no result for this batch yet."
+    if 'unknown_submission' in body:
+        return 'pending', (
+            "Crossref does not recognise this batch yet under either its batch id or its "
+            "file name. It is normally still queued; if this persists for hours, check the "
+            "submission queue at doi.crossref.org and the report emailed to the depositor."
+        )
 
     try:
         root = ET.fromstring(body)
