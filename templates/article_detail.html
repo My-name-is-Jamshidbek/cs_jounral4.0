@@ -96,8 +96,8 @@
     <h2 class="font-semibold text-gray-800 text-sm mb-2">{% trans 'Article Metadata' %}</h2>
     <p><strong>{% trans 'Permanent URL' %}:</strong> <a href="{{ absolute_url }}" class="text-blue-700 break-all">{{ absolute_url }}</a></p>
     {% if article.doi %}<p><strong>DOI:</strong> <a href="https://doi.org/{{ article.doi }}" target="_blank" class="text-blue-700 break-all">https://doi.org/{{ article.doi }}</a></p>{% endif %}
-    {% if site_config.issn_print %}<p><strong>{% trans 'Print ISSN' %}:</strong> {{ site_config.issn_print }}</p>{% endif %}
-    {% if site_config.issn_online %}<p><strong>{% trans 'Online ISSN' %}:</strong> {{ site_config.issn_online }}</p>{% endif %}
+    {% if issn_print %}<p><strong>{% trans 'Print ISSN' %}:</strong> {{ issn_print }}</p>{% endif %}
+    {% if issn_online and issn_online != issn_print %}<p><strong>{% trans 'Online ISSN' %}:</strong> {{ issn_online }}</p>{% endif %}
     {% if article.last_scholar_sync %}<p><strong>{% trans 'Last Scholar Sync' %}:</strong> {{ article.last_scholar_sync|date:'Y-m-d H:i' }}</p>{% endif %}
   </aside>
 </div>

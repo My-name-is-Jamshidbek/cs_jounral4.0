@@ -600,8 +600,11 @@
               {% endif %}
                 <p>Tel: +998 90 118 98 83</p>
                 <p>Telegram: @komparativistika_ILJ</p>
-              {% if site_config.issn_print %}
-                <p>{% trans "Print ISSN:" %} {{ site_config.issn_print|safe }}</p>
+              {% if issn_print %}
+                <p>{% trans "Print ISSN:" %} {{ issn_print }}</p>
+              {% endif %}
+              {% if issn_online and issn_online != issn_print %}
+                <p>{% trans "Online ISSN:" %} {{ issn_online }}</p>
               {% endif %}
 {#              {% if site_config.issn_online %}#}
 {#                <p>{% trans "Online ISSN:" %} {{ site_config.issn_online }}</p>#}
