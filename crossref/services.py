@@ -5,6 +5,7 @@ Nothing in here talks to Crossref on its own — `submit_batch` is only ever
 called from the admin approval action, never from the cron command.
 """
 
+import html
 import re
 import uuid
 import xml.etree.ElementTree as ET
@@ -28,13 +29,28 @@ BASE_URLS = {
 # Landing pages Crossref could never resolve; refuse to deposit these.
 UNREACHABLE_HOSTS = {'localhost', '127.0.0.1', '0.0.0.0', '::1', 'testserver'}
 
+EMAIL_RE = re.compile(r'[\w.+-]+@[\w-]+\.[\w.-]+')
+ISSN_RE = re.compile(r'\d{4}-\d{3}[\dXx]')
+
 
 class CrossrefError(Exception):
     """Raised when a deposit cannot be built or sent."""
 
 
+def clean_value(raw):
+    """
+    Flatten a Default setting into plain text.
+
+    Default.value is a CKEditor RichTextField, so every setting arrives wrapped
+    in markup ("<p>O&#39;zbekiston …</p>"). Deposited metadata must be plain
+    text, so drop the tags and decode the entities CKEditor left behind.
+    """
+    text = html.unescape(strip_tags(raw or ''))
+    return text.replace('\xa0', ' ').strip()
+
+
 def get_site_config():
-    return {d.name: d.value for d in Default.objects.all()}
+    return {d.name: clean_value(d.value) for d in Default.objects.all()}
 
 
 def get_environment():
@@ -59,8 +75,7 @@ def get_credentials():
 
 def get_doi_prefix(site_config=None):
     site_config = site_config if site_config is not None else get_site_config()
-    prefix = strip_tags(site_config.get('doi_prefix', '') or '').strip()
-    prefix = prefix or (getattr(settings, 'CROSSREF_DOI_PREFIX', '') or '').strip()
+    prefix = site_config.get('doi_prefix', '') or (getattr(settings, 'CROSSREF_DOI_PREFIX', '') or '').strip()
     if not prefix:
         raise CrossrefError(
             "No DOI prefix configured. Add a 'doi_prefix' row in Default Settings "
@@ -84,6 +99,40 @@ def get_site_base_url():
     return base
 
 
+def get_depositor_email(site_config):
+    """
+    Find a real address for the depositor.
+
+    The site's contact_email setting is free text ("Email: x@y.uz" inside
+    markup), so pull the address out of it rather than depositing the sentence.
+    """
+    candidates = [
+        getattr(settings, 'CROSSREF_DEPOSIT_EMAIL', ''),
+        site_config.get('contact_email', ''),
+        site_config.get('submission_email', ''),
+    ]
+    for candidate in candidates:
+        match = EMAIL_RE.search(clean_value(candidate))
+        if match:
+            return match.group(0)
+    raise CrossrefError(
+        "No depositor email address found. Set CROSSREF_DEPOSIT_EMAIL in .env, "
+        "or put a valid address in the 'contact_email' Default setting."
+    )
+
+
+def get_issn(site_config):
+    """Return (issn, media_type). Crossref rejects journal deposits without one."""
+    for key, media_type in (('issn_online', 'electronic'), ('issn_print', 'print')):
+        match = ISSN_RE.search(site_config.get(key, ''))
+        if match:
+            return match.group(0).upper(), media_type
+    raise CrossrefError(
+        "No ISSN configured. Crossref requires an ISSN for journal deposits — add "
+        "an 'issn_print' or 'issn_online' row in Default Settings (format 1234-5678)."
+    )
+
+
 def build_resource_url(article, base_url=None):
     return f"{base_url or get_site_base_url()}{article.get_absolute_url()}"
 
@@ -105,18 +154,31 @@ def build_doi(article, prefix, taken):
     return f"{candidate}-{n}"
 
 
-def split_authors(raw):
-    """Best-effort split of a free-text authors string into given/surname pairs."""
+def split_authors(raw, surname_first=None):
+    """
+    Split a free-text authors string into given/surname pairs.
+
+    Uzbek names are written surname first — "Axmedova Aziza Komilovna" is
+    surname Axmedova, given name Aziza, patronymic Komilovna — and that is how
+    this journal stores them. Western order (given name first) is available via
+    CROSSREF_AUTHOR_NAME_ORDER=given-first for journals that need it.
+    """
+    if surname_first is None:
+        order = (getattr(settings, 'CROSSREF_AUTHOR_NAME_ORDER', '') or 'surname-first').lower()
+        surname_first = order != 'given-first'
+
     if not raw:
         return []
-    names = [n.strip() for n in raw.replace(';', ',').split(',') if n.strip()]
+    names = [n.strip() for n in clean_value(raw).replace(';', ',').split(',') if n.strip()]
     result = []
     for name in names:
         bits = name.split()
-        if len(bits) >= 2:
-            result.append({'given': ' '.join(bits[:-1]), 'surname': bits[-1]})
-        else:
+        if len(bits) < 2:
             result.append({'given': '', 'surname': name})
+        elif surname_first:
+            result.append({'given': ' '.join(bits[1:]), 'surname': bits[0]})
+        else:
+            result.append({'given': ' '.join(bits[:-1]), 'surname': bits[-1]})
     return result
 
 
@@ -131,7 +193,11 @@ def build_deposit_xml(entries, batch_id=None, site_config=None):
     `entries` is a list of (article, doi, resource_url) tuples. Articles are
     grouped by their parent Issue, which is what the Crossref schema expects.
     """
-    site_config = site_config if site_config is not None else get_site_config()
+    # Re-clean even a caller-supplied config: nothing with markup in it may
+    # reach the deposit, and clean_value is a no-op on already-plain text.
+    site_config = {k: clean_value(v) for k, v in (
+        site_config if site_config is not None else get_site_config()
+    ).items()}
 
     groups, order = {}, []
     for article, doi, resource_url in entries:
@@ -139,28 +205,29 @@ def build_deposit_xml(entries, batch_id=None, site_config=None):
             groups[article.issue_id] = {'issue': article.issue, 'articles': []}
             order.append(article.issue_id)
         groups[article.issue_id]['articles'].append({
-            'title': strip_tags(article.title),
+            'title': clean_value(article.title),
             'doi': doi,
             'publication_date': article.publication_date,
             'absolute_url': resource_url,
             'authors_list': split_authors(article.authors),
         })
 
+    issn, issn_media_type = get_issn(site_config)
     context = {
         'batch_id': batch_id or make_batch_id(),
         'timestamp': f"{timezone.now():%Y%m%d%H%M%S}",
-        'depositor_name': site_config.get('editor_in_chief') or site_config.get('publisher') or 'Journal Editor',
-        'depositor_email': (
-            getattr(settings, 'CROSSREF_DEPOSIT_EMAIL', '')
-            or site_config.get('contact_email')
-            or 'editor@example.com'
+        'depositor_name': (
+            site_config.get('crossref_registrant') or site_config.get('publisher')
+            or site_config.get('editor_in_chief') or 'Journal Editor'
         ),
+        'depositor_email': get_depositor_email(site_config),
         'registrant': (
             site_config.get('crossref_registrant') or site_config.get('publisher')
             or site_config.get('site_title') or 'Journal Publisher'
         ),
-        'journal_title': strip_tags(site_config.get('site_title', 'Journal')),
-        'issn': site_config.get('issn_print') or site_config.get('issn_online') or '',
+        'journal_title': site_config.get('site_title') or 'Journal',
+        'issn': issn,
+        'issn_media_type': issn_media_type,
         'issue_groups': [groups[k] for k in order],
     }
     return render_to_string('crossref/deposit.xml', context)

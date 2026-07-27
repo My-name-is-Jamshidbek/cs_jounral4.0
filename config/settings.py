@@ -222,6 +222,11 @@ CROSSREF_DEPOSIT_EMAIL = os.environ.get("CROSSREF_DEPOSIT_EMAIL", "")
 # so production must be opted into explicitly.
 CROSSREF_ENVIRONMENT = os.environ.get("CROSSREF_ENVIRONMENT", "sandbox")
 
+# How author names are written in JournalIssue.authors. Uzbek names are
+# surname-first ("Axmedova Aziza Komilovna"); set to "given-first" for the
+# western order ("Aziza Axmedova").
+CROSSREF_AUTHOR_NAME_ORDER = os.environ.get("CROSSREF_AUTHOR_NAME_ORDER", "surname-first")
+
 # Public base URL used to build the DOI landing-page links sent to Crossref.
 # Cron has no HttpRequest, so this cannot be derived from the request.
 SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "https://jurnal-komparativistika.uz")
