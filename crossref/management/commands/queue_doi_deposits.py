@@ -6,7 +6,7 @@ mints one for each, renders the deposit XML and parks it in the admin under
 Crossref DOI → DOI deposit batches. A human approves it there.
 """
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Q
 
@@ -32,13 +32,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         force_utf8(self.stdout, self.stderr)
+        # A misconfiguration is an operator problem, not a crash: cron should log
+        # one readable line and exit non-zero, not a twenty-line traceback.
         try:
-            site_config = get_site_config()
-            prefix = get_doi_prefix(site_config)
-            base_url = get_site_base_url()
+            self._queue(**options)
         except CrossrefError as exc:
-            self.stderr.write(self.style.ERROR(str(exc)))
-            return
+            raise CommandError(str(exc))
+
+    def _queue(self, **options):
+        site_config = get_site_config()
+        prefix = get_doi_prefix(site_config)
+        base_url = get_site_base_url()
 
         # Articles already sitting in a batch that is pending or in flight must
         # not be queued a second time.
