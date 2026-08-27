@@ -1,8 +1,9 @@
 """
-Crossref deposit helpers.
+Crossref deposit helpers: building the deposit XML and talking HTTP.
 
-Nothing in here talks to Crossref on its own — `submit_batch` is only ever
-called from the admin approval action, never from the cron command.
+Nothing here decides *when* to deposit. `submit_batch` and `check_batch` are
+called from `crossref.deposits`, which owns the workflow — that is the module to
+read for what is checked before anything irreversible leaves this server.
 """
 
 import re

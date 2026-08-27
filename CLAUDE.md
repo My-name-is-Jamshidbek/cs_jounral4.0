@@ -59,6 +59,31 @@ This is the most load-bearing cross-cutting concern.
 
 Rich text uses `ckeditor.fields.RichTextField`. Two configs in settings: `default` (full toolbar) and `subscription_editor` (curated toolbar). Uploads go to `media/uploads/` (`CKEDITOR_UPLOAD_PATH`).
 
+### Crossref DOIs
+
+**After adding articles, always register their DOIs — never write a DOI by hand.**
+A hand-typed DOI shows up on the article page but was never deposited, and it
+permanently removes the article from the deposit queue (which only picks up
+articles whose `doi` is empty). `JournalIssue.doi` is therefore read-only in the
+admin; DOIs are minted only by the deposit workflow, as `<prefix>/comp.<year>.<article id, 4 digits>`.
+
+```bash
+python manage.py register_dois --dry-run        # show what would be registered
+python manage.py register_dois --issue 13       # mint + deposit in one step
+python manage.py register_dois --wait 15        # ...and poll for the result
+python manage.py check_doi_deposits             # collect results of earlier deposits
+```
+
+`crossref/deposits.py` owns the workflow (choose articles → freeze batch → validate
+→ send → record result); `crossref/services.py` only builds XML and talks HTTP.
+Two entry points share it: `register_dois` (unattended) and `queue_doi_deposits`
+(parks a batch in the admin for human approval). Registration is asynchronous, so
+`check_doi_deposits` **must** run on a schedule — it is what notices a rejected
+batch and clears the unregistered DOIs so those articles return to the queue.
+
+`CROSSREF_ENVIRONMENT` defaults to `sandbox`; sandbox DOIs never resolve on
+doi.org. Production DOIs are permanent and cannot be deleted.
+
 ### Google Scholar citations (optional)
 
 `JournalIssue.update_scholar_metadata()` fetches citation counts via the `scholarly` package, which is **not in requirements.txt** — the method degrades gracefully ("scholarly not installed") if absent. It self-throttles to once per day unless `force=True`.

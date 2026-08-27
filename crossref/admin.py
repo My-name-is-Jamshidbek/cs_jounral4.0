@@ -1,15 +1,9 @@
-import xml.etree.ElementTree as ET
-
 from django.contrib import admin, messages
-from django.db import transaction
 from django.http import HttpResponse
-from django.utils import timezone
 from django.utils.html import format_html
 
-from issue.models import JournalIssue
-
+from .deposits import approve_and_submit
 from .models import DepositBatch, DepositItem
-from .services import submit_batch
 
 
 class DepositItemInline(admin.TabularInline):
@@ -58,42 +52,10 @@ class DepositBatchAdmin(admin.ModelAdmin):
     @admin.action(description="Approve and deposit selected batches to Crossref")
     def approve_and_deposit(self, request, queryset):
         for batch in queryset:
-            if not batch.is_editable:
-                self.message_user(
-                    request,
-                    f"{batch.batch_id}: skipped — status is '{batch.get_status_display()}', only pending batches can be approved.",
-                    level=messages.WARNING,
-                )
-                continue
-
-            problem = self._validate(batch)
-            if problem:
-                batch.append_log(f"Approval refused: {problem}")
-                batch.save(update_fields=['log'])
-                self.message_user(request, f"{batch.batch_id}: {problem}", level=messages.ERROR)
-                continue
-
-            ok, message = submit_batch(batch)
-            batch.approved_at = timezone.now()
-            batch.approved_by = request.user
-            batch.append_log(f"Approved by {request.user}. {message}")
-
+            ok, message = approve_and_submit(batch, user=request.user, actor=str(request.user))
             if not ok:
-                batch.status = DepositBatch.FAILED
-                batch.items.update(status=DepositItem.FAILED)
-                batch.save(update_fields=['status', 'approved_at', 'approved_by', 'log'])
-                self.message_user(request, f"{batch.batch_id}: deposit failed — {message[:300]}", level=messages.ERROR)
+                self.message_user(request, f"{batch.batch_id}: {message[:300]}", level=messages.ERROR)
                 continue
-
-            with transaction.atomic():
-                for item in batch.items.select_related('article'):
-                    item.article.doi = item.proposed_doi
-                    item.article.save(update_fields=['doi'])
-                    item.status = DepositItem.DEPOSITED
-                    item.save(update_fields=['status'])
-                batch.status = DepositBatch.SUBMITTED
-                batch.submitted_at = timezone.now()
-                batch.save(update_fields=['status', 'submitted_at', 'approved_at', 'approved_by', 'log'])
 
             self.message_user(
                 request,
@@ -131,53 +93,6 @@ class DepositBatchAdmin(admin.ModelAdmin):
         response = HttpResponse(batch.xml, content_type='application/xml')
         response['Content-Disposition'] = f'attachment; filename="{batch.batch_id}.xml"'
         return response
-
-    def _validate(self, batch):
-        """
-        Re-check the batch against the live database. The XML was rendered when
-        the batch was queued, so anything that changed since then makes it stale.
-        """
-        items = list(batch.items.select_related('article'))
-        if not items:
-            return "batch has no articles."
-
-        already = [i for i in items if i.article.doi]
-        if already:
-            return (
-                f"{len(already)} article(s) already have a DOI (e.g. #{already[0].article_id} = "
-                f"{already[0].article.doi}). Cancel this batch and re-run queue_doi_deposits."
-            )
-
-        proposed = [i.proposed_doi for i in items]
-        if len(set(proposed)) != len(proposed):
-            return "the batch proposes the same DOI for more than one article."
-
-        clash = (
-            JournalIssue.objects.filter(doi__in=proposed)
-            .exclude(pk__in=[i.article_id for i in items])
-            .values_list('doi', flat=True)
-        )
-        if clash:
-            return f"proposed DOI(s) already used by other articles: {', '.join(clash)}."
-
-        # The XML is frozen at queue time but the items are not: deleting an
-        # article cascades its item away and leaves the DOI stranded in the XML,
-        # which would register a DOI resolving to a deleted page.
-        try:
-            root = ET.fromstring(batch.xml)
-        except ET.ParseError as exc:
-            return f"stored XML is not parseable ({exc}). Cancel this batch and re-run queue_doi_deposits."
-        # iterfind, not iter: the {*} namespace wildcard is an ElementPath
-        # feature and iter() would match nothing at all here.
-        in_xml = {node.text.strip() for node in root.iterfind('.//{*}doi') if node.text}
-        if in_xml != set(proposed):
-            orphaned = in_xml - set(proposed)
-            detail = f" Stale entries: {', '.join(sorted(orphaned))}." if orphaned else ''
-            return (
-                "the XML no longer matches this batch's articles — it was rendered before the "
-                f"articles changed.{detail} Cancel this batch and re-run queue_doi_deposits."
-            )
-        return None
 
 
 @admin.register(DepositItem)

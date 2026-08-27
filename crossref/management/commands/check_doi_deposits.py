@@ -3,14 +3,18 @@ Cron entry point: poll Crossref for the result of already-submitted batches.
 
 Crossref processes deposits asynchronously, so a successful submission only
 means "received". This command moves batches from `submitted` to `registered`
-or `failed` once Crossref publishes a result.
+or `failed` once Crossref publishes a result — and takes back the DOIs of a
+rejected batch so those articles return to the queue.
+
+This must run on a schedule. Without it a rejected deposit leaves its articles
+displaying DOIs that resolve nowhere, and nothing ever notices.
 """
 
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
 from crossref.console import force_utf8
-from crossref.models import DepositBatch, DepositItem
+from crossref.deposits import record_batch_result
+from crossref.models import DepositBatch
 from crossref.services import check_batch
 
 
@@ -33,41 +37,9 @@ class Command(BaseCommand):
 
         for batch in batches:
             state, message = check_batch(batch)
-            batch.checked_at = timezone.now()
-            batch.append_log(f"Result check: {state} — {message}")
-
-            if state == 'registered':
-                batch.status = DepositBatch.REGISTERED
-                batch.items.update(status=DepositItem.REGISTERED)
-                style = self.style.SUCCESS
-            elif state == 'failed':
-                batch.status = DepositBatch.FAILED
-                batch.items.update(status=DepositItem.FAILED)
-                released = self._release_dois(batch)
-                if released:
-                    batch.append_log(f"Cleared {released} unregistered DOI(s) from their articles.")
-                style = self.style.ERROR
-            else:
-                style = self.style.NOTICE
-
-            batch.save(update_fields=['status', 'checked_at', 'log'])
+            record_batch_result(batch, state, message)
+            style = {
+                'registered': self.style.SUCCESS,
+                'failed': self.style.ERROR,
+            }.get(state, self.style.NOTICE)
             self.stdout.write(style(f"{batch.batch_id}: {state} - {message[:200]}"))
-
-    def _release_dois(self, batch):
-        """
-        Take back the DOIs of a rejected batch.
-
-        The DOI is written to the article at approval time, but Crossref only
-        registers it later. When registration fails, that DOI resolves nowhere
-        and — worse — makes the article look done, so the next cron run skips
-        it forever. Clear it so the article returns to the queue.
-        """
-        released = 0
-        for item in batch.items.select_related('article'):
-            # Only take back the DOI this batch proposed: an editor may have
-            # set a different one by hand in the meantime.
-            if item.article.doi == item.proposed_doi:
-                item.article.doi = None
-                item.article.save(update_fields=['doi'])
-                released += 1
-        return released
