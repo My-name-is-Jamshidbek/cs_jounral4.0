@@ -45,6 +45,12 @@ class JournalIssue(models.Model):
         max_length=100, blank=True, null=True, unique=True,
         help_text="Crossref DOI, e.g. 10.64964/comp.2026.001. Leave blank until registered."
     )
+    # Page range within the printed issue. Free text rather than integers:
+    # some articles are numbered "iv" or "12a". Google Scholar and Crossref both
+    # want these to build a complete citation, and both simply omit the pages
+    # when they are blank.
+    first_page = models.CharField(max_length=20, blank=True, default='')
+    last_page = models.CharField(max_length=20, blank=True, default='')
     publication_date = models.DateField()
     views = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

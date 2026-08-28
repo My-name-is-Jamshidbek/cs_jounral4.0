@@ -19,7 +19,8 @@ class IssueAdmin(admin.ModelAdmin):
 
 @admin.register(JournalIssue)
 class JournalIssueAdmin(admin.ModelAdmin):
-    list_display = ('title', 'issue', 'volume', 'issue_number', 'accessability', 'doi', 'authors', 'publication_date', 'views')
+    list_display = ('title', 'issue', 'volume', 'issue_number', 'first_page', 'last_page',
+                    'accessability', 'doi', 'authors', 'publication_date', 'views')
     list_filter = ('accessability', 'publication_date', 'volume', 'created_at')
     search_fields = ('title', 'description', 'authors', 'volume', 'issue_number', 'doi')
     # doi is deliberately not editable here. A hand-typed DOI is displayed on the
@@ -31,7 +32,10 @@ class JournalIssueAdmin(admin.ModelAdmin):
     readonly_fields = ('doi', 'created_at', 'updated_at', 'views')
     ordering = ('-publication_date',)
     date_hierarchy = 'publication_date'
-    list_editable = ('accessability',)
+    # Page numbers are edited straight from the changelist: they are filled in
+    # for a whole issue at once, and opening 30 forms to type two numbers each
+    # is how they end up never being filled in at all.
+    list_editable = ('accessability', 'first_page', 'last_page')
     actions = ['register_dois_now', 'export_crossref_xml']
 
     @admin.action(description="Register DOIs with Crossref for selected articles")

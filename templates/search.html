@@ -55,7 +55,9 @@
                 <span class="text-gray-500">{{ article.publication_date|date:"F Y" }}</span>
                 {% if article.issue %}
                   <span class="mx-2 text-gray-400">|</span>
-                  <span class="text-gray-500">{% blocktrans with volume=article.volume issue_number=article.issue_number %}Vol {{ volume }}, Issue {{ issue_number }}{% endblocktrans %}</span>
+                  {# The parent Issue is what the journal publishes under; the article's own
+                     columns drift from it, so they are only a fallback here. #}
+                  <span class="text-gray-500">{% blocktrans with volume=article.issue.volume|default:article.volume issue_number=article.issue.issue_number|default:article.issue_number %}Vol {{ volume }}, Issue {{ issue_number }}{% endblocktrans %}</span>
                 {% endif %}
               </div>
 

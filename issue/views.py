@@ -158,11 +158,20 @@ def article_detail(request, pk):
     absolute_url = language_urls.get(settings.LANGUAGE_CODE) or request.build_absolute_uri(
         article.get_absolute_url()
     )
+    # Volume and issue live on both the Issue and the article, and the two
+    # drift: articles in "Volume 3, Issue 12" were carrying volume 26. The Issue
+    # is what the journal actually publishes under, and it is already what the
+    # Crossref deposit records, so trust it here too and keep the article's own
+    # value only as a fallback for rows whose Issue was left blank.
+    citation_volume = article.issue.volume or article.volume
+    citation_issue = article.issue.issue_number or article.issue_number
     context = {
         'article': article,
         'issue_obj': article.issue,
         'authors_list': authors_list,
         'authors_citation': authors_citation,
+        'citation_volume': citation_volume,
+        'citation_issue': citation_issue,
         'absolute_url': absolute_url,
         'alternate_urls': sorted(language_urls.items()),
     }

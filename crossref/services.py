@@ -281,6 +281,10 @@ def build_deposit_xml(entries, batch_id=None, site_config=None):
             'publication_date': article.publication_date,
             'absolute_url': resource_url,
             'authors_list': split_authors(article.authors),
+            # Crossref accepts <pages> with only a first_page, but not a
+            # last_page on its own, so a lone last_page is dropped.
+            'first_page': (getattr(article, 'first_page', '') or '').strip(),
+            'last_page': (getattr(article, 'last_page', '') or '').strip(),
         })
 
     context = {

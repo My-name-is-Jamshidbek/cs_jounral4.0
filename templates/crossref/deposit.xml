@@ -57,6 +57,12 @@
           <day>{{ article.publication_date|date:"d" }}</day>
           <year>{{ article.publication_date|date:"Y" }}</year>
         </publication_date>
+        {% if article.first_page %}
+        <pages>
+          <first_page>{{ article.first_page }}</first_page>
+          {% if article.last_page %}<last_page>{{ article.last_page }}</last_page>{% endif %}
+        </pages>
+        {% endif %}
         <doi_data>
           <doi>{{ article.doi }}</doi>
           <resource>{{ article.absolute_url }}</resource>
