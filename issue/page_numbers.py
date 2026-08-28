@@ -14,6 +14,7 @@ PDF on its own.
 """
 
 import re
+from collections import namedtuple
 
 # A printed page number sits alone on its line. Bounded to four digits: a longer
 # run of digits is a year, a UDC code or a phone number, not a page.
@@ -22,6 +23,18 @@ PAGE_LINE = re.compile(r'^(\d{1,4})$')
 # How many lines from the top of a page to look at. The header is one or two
 # lines, so anything further down is body text that merely starts with a number.
 HEADER_LINES = 4
+
+# Every article opens with its UDC classification line, in one of several
+# spellings ("UOʻK(UDC, УДК):", "UDC (UOʻK, УДК):"). It marks where the article
+# itself begins, which is not always the first page of the file: some PDFs were
+# split with a few trailing pages of the previous article still attached.
+ARTICLE_START = re.compile(r'\b(UDC|УДК)\b', re.IGNORECASE)
+
+# Only look for that marker near the front. Further in, a reference list can
+# mention a UDC code and would drag the start of the article with it.
+START_SEARCH_PAGES = 8
+
+PageRange = namedtuple('PageRange', 'first last problem leading')
 
 
 def printed_page_number(page):
@@ -34,33 +47,49 @@ def printed_page_number(page):
     return None
 
 
+def article_start_index(reader):
+    """Index of the page the article itself starts on, 0 for a clean file."""
+    for index, page in enumerate(reader.pages[:START_SEARCH_PAGES]):
+        if ARTICLE_START.search(page.extract_text() or ''):
+            return index
+    return 0
+
+
 def page_range(path):
     """
-    Return (first, last, problem) for one PDF.
+    Return PageRange(first, last, problem, leading) for one PDF.
 
-    `problem` is None when the range was read *and verified*: the number of
-    pages between first and last must equal the number of pages in the file.
+    `problem` is None when the range was read *and verified*: the span from
+    first to last must equal the number of pages the article actually occupies.
     A page range ends up in Crossref and in every citation Google Scholar
     builds, so a PDF that fails the check yields a problem rather than a guess.
+
+    `leading` counts pages sitting in front of the article, left over from the
+    previous one when the issue PDF was split.
     """
     import pypdf
+
+    def fail(message, leading=0):
+        return PageRange(None, None, message, leading)
 
     try:
         reader = pypdf.PdfReader(path)
     except Exception as exc:
-        return None, None, f"cannot read the PDF ({exc})"
+        return fail(f"cannot read the PDF ({exc})")
 
-    count = len(reader.pages)
-    if not count:
-        return None, None, "PDF has no pages"
+    if not len(reader.pages):
+        return fail("PDF has no pages")
 
-    first = printed_page_number(reader.pages[0])
+    start = article_start_index(reader)
+    count = len(reader.pages) - start
+
+    first = printed_page_number(reader.pages[start])
     last = printed_page_number(reader.pages[-1])
     if first is None or last is None:
-        return None, None, "no page number printed in the header"
+        return fail("no page number printed in the header", start)
     if last < first:
-        return None, None, f"last page {last} is before first page {first}"
+        return fail(f"last page {last} is before first page {first}", start)
     if last - first + 1 != count:
-        return None, None, (f"printed range {first}-{last} covers {last - first + 1} pages "
-                            f"but the file has {count}")
-    return first, last, None
+        return fail(f"printed range {first}-{last} covers {last - first + 1} pages "
+                    f"but the article occupies {count}", start)
+    return PageRange(first, last, None, start)

@@ -60,13 +60,16 @@ class Command(BaseCommand):
                 failed += 1
                 continue
 
-            first, last, problem = page_range(path)
+            first, last, problem, leading = page_range(path)
             if problem:
                 self.stdout.write(self.style.WARNING(f"  #{article.pk}: {problem} - {article.file.name}"))
                 failed += 1
                 continue
 
-            self.stdout.write(f"  #{article.pk}: {first}-{last}")
+            # Worth saying out loud: the file carries pages of the previous
+            # article, so the issue PDF was split a few pages too early.
+            extra = f"  (+{leading} leading page(s) from the previous article)" if leading else ''
+            self.stdout.write(f"  #{article.pk}: {first}-{last}{extra}")
             if options['dry_run']:
                 continue
             article.first_page = str(first)
