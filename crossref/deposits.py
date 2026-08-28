@@ -99,7 +99,47 @@ def collect_deposit_entries(issue_id=None, limit=0, site_config=None, article_id
     return entries, skipped
 
 
-def create_batch(entries, skipped=(), environment=None, site_config=None, note=''):
+def collect_update_entries(issue_id=None, limit=0, article_ids=None, resource_override=None):
+    """
+    Gather articles that already have a DOI, to re-send their current metadata.
+
+    Crossref treats a deposit of a DOI it already knows as an update, so this is
+    how a correction reaches a registered record — page numbers added after the
+    fact, a fixed title, or a duplicate DOI redirected at the surviving article.
+
+    `resource_override` maps article pk to a landing page URL, for the duplicate
+    case where a DOI must resolve somewhere other than its own article.
+    """
+    from issue.models import JournalIssue
+
+    base_url = get_site_base_url()
+
+    articles = (
+        JournalIssue.objects
+        .exclude(doi__isnull=True).exclude(doi__exact='')
+        .select_related('issue')
+        .order_by('issue_id', 'pk')
+    )
+    if issue_id:
+        articles = articles.filter(issue_id=issue_id)
+    if article_ids is not None:
+        articles = articles.filter(pk__in=article_ids)
+    if limit:
+        articles = articles[:limit]
+
+    entries, skipped = [], []
+    for article in articles:
+        reason = article_deposit_problem(article)
+        if reason:
+            skipped.append((article, reason))
+            continue
+        url = (resource_override or {}).get(article.pk) or build_resource_url(article, base_url)
+        entries.append((article, article.doi, url))
+    return entries, skipped
+
+
+def create_batch(entries, skipped=(), environment=None, site_config=None, note='',
+                 kind=DepositBatch.NEW):
     """Freeze `entries` into a pending DepositBatch together with its XML."""
     environment = environment or get_environment()
     batch_id = make_batch_id()
@@ -108,7 +148,7 @@ def create_batch(entries, skipped=(), environment=None, site_config=None, note='
     with transaction.atomic():
         batch = DepositBatch.objects.create(
             batch_id=batch_id, environment=environment, xml=xml,
-            status=DepositBatch.PENDING,
+            status=DepositBatch.PENDING, kind=kind,
         )
         batch.append_log(note or f"Queued with {len(entries)} article(s) for {environment}.")
         if skipped:
@@ -136,12 +176,24 @@ def validate_batch(batch):
     if not items:
         return "batch has no articles."
 
-    already = [i for i in items if i.article.doi]
-    if already:
-        return (
-            f"{len(already)} article(s) already have a DOI (e.g. #{already[0].article_id} = "
-            f"{already[0].article.doi}). Cancel this batch and queue a new one."
-        )
+    if batch.kind == DepositBatch.UPDATE:
+        # An update must re-send each article's own registered DOI. Sending a
+        # different one would register a second DOI for the same article rather
+        # than correcting the first.
+        moved = [i for i in items if i.article.doi != i.proposed_doi]
+        if moved:
+            return (
+                f"{len(moved)} article(s) no longer carry the DOI this batch would update "
+                f"(e.g. #{moved[0].article_id} now has {moved[0].article.doi or 'no DOI'}, "
+                f"batch has {moved[0].proposed_doi}). Cancel this batch and queue a new one."
+            )
+    else:
+        already = [i for i in items if i.article.doi]
+        if already:
+            return (
+                f"{len(already)} article(s) already have a DOI (e.g. #{already[0].article_id} = "
+                f"{already[0].article.doi}). Cancel this batch and queue a new one."
+            )
 
     proposed = [i.proposed_doi for i in items]
     if len(set(proposed)) != len(proposed):
@@ -207,8 +259,10 @@ def approve_and_submit(batch, user=None, actor=None, timeout=60):
 
     with transaction.atomic():
         for item in batch.items.select_related('article'):
-            item.article.doi = item.proposed_doi
-            item.article.save(update_fields=['doi'])
+            # Already equal for an update batch, which validate_batch enforces.
+            if item.article.doi != item.proposed_doi:
+                item.article.doi = item.proposed_doi
+                item.article.save(update_fields=['doi'])
             item.status = DepositItem.DEPOSITED
             item.save(update_fields=['status'])
         batch.status = DepositBatch.SUBMITTED
@@ -235,16 +289,22 @@ def record_batch_result(batch, state, message):
     elif state == 'failed':
         batch.status = DepositBatch.FAILED
         released = 0
-        for item in batch.items.select_related('article'):
-            # Only take back the DOI this batch proposed: an editor may have set
-            # a different one by hand in the meantime.
-            if item.article.doi == item.proposed_doi:
-                item.article.doi = None
-                item.article.save(update_fields=['doi'])
-                released += 1
+        # Only a `new` batch may take its DOIs back. An update batch re-sends
+        # DOIs that are already registered and permanent: clearing those would
+        # strip live DOIs off the site because a correction was rejected.
+        if batch.kind == DepositBatch.NEW:
+            for item in batch.items.select_related('article'):
+                # Only take back the DOI this batch proposed: an editor may have
+                # set a different one by hand in the meantime.
+                if item.article.doi == item.proposed_doi:
+                    item.article.doi = None
+                    item.article.save(update_fields=['doi'])
+                    released += 1
         batch.items.update(status=DepositItem.FAILED)
         if released:
             batch.append_log(f"Cleared {released} unregistered DOI(s) from their articles.")
+        elif batch.kind == DepositBatch.UPDATE:
+            batch.append_log("Update batch: the existing DOIs were left untouched.")
 
     batch.save(update_fields=['status', 'checked_at', 'log'])
     return batch

@@ -72,7 +72,14 @@ python manage.py register_dois --dry-run        # show what would be registered
 python manage.py register_dois --issue 13       # mint + deposit in one step
 python manage.py register_dois --wait 15        # ...and poll for the result
 python manage.py check_doi_deposits             # collect results of earlier deposits
+python manage.py update_doi_metadata --issue 13 # re-send registered DOIs with corrected metadata
+python manage.py import_page_numbers --dry-run  # read first/last page out of each article PDF
 ```
+
+A batch is either `new` (mints DOIs for articles that have none) or `update`
+(re-sends registered DOIs so Crossref picks up a correction). The distinction is
+load-bearing: a failed `new` batch releases its DOIs so the articles requeue, and
+a failed `update` batch must leave them alone — those DOIs are already permanent.
 
 `crossref/deposits.py` owns the workflow (choose articles → freeze batch → validate
 → send → record result); `crossref/services.py` only builds XML and talks HTTP.

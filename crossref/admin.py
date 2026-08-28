@@ -26,11 +26,11 @@ class DepositItemInline(admin.TabularInline):
 
 @admin.register(DepositBatch)
 class DepositBatchAdmin(admin.ModelAdmin):
-    list_display = ('batch_id', 'status', 'environment', 'item_count', 'created_at', 'submitted_at', 'approved_by')
-    list_filter = ('status', 'environment', 'created_at')
+    list_display = ('batch_id', 'kind', 'status', 'environment', 'item_count', 'created_at', 'submitted_at', 'approved_by')
+    list_filter = ('kind', 'status', 'environment', 'created_at')
     search_fields = ('batch_id', 'log', 'items__proposed_doi')
     readonly_fields = (
-        'batch_id', 'environment', 'status', 'created_at', 'approved_at', 'approved_by',
+        'batch_id', 'kind', 'environment', 'status', 'created_at', 'approved_at', 'approved_by',
         'submitted_at', 'checked_at', 'log', 'xml_preview',
     )
     exclude = ('xml',)

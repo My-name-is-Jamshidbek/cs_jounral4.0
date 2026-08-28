@@ -24,9 +24,24 @@ class DepositBatch(models.Model):
         (CANCELLED, 'Cancelled'),
     ]
 
+    NEW = 'new'
+    UPDATE = 'update'
+    KIND_CHOICES = [
+        (NEW, 'Register new DOIs'),
+        (UPDATE, 'Update metadata of existing DOIs'),
+    ]
+
     batch_id = models.CharField(
         max_length=100, unique=True,
         help_text="doi_batch_id sent to Crossref; also the key used to poll for results."
+    )
+    kind = models.CharField(
+        max_length=20, choices=KIND_CHOICES, default=NEW,
+        help_text=(
+            "A new batch mints DOIs for articles that have none. An update re-sends "
+            "existing DOIs with corrected metadata, and must never clear a DOI from its "
+            "article when it fails — the DOI is already registered and permanent."
+        ),
     )
     environment = models.CharField(
         max_length=20, choices=[('sandbox', 'Sandbox (test.crossref.org)'),
