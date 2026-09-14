@@ -95,8 +95,17 @@ def all_issues(request):
     for decade in decades_dict:
         decades_dict[decade] = sorted(decades_dict[decade], reverse=True)
 
+    # The issue links are rendered in the HTML itself, grouped by year, and the
+    # script only shows one year at a time. Building them in JavaScript left the
+    # archive with no link a crawler could follow: Google Scholar does not run
+    # scripts, so every issue before the current one was unreachable from the site.
+    issue_years = [
+        {'year': year, 'issues': issues_by_year[year]}
+        for year in sorted(issues_by_year, reverse=True)
+    ]
+
     context = {
-        'issues_data': json.dumps(issues_by_year),
+        'issue_years': issue_years,
         'decades_data': json.dumps(decades_dict),
         'current_year': datetime.now().year
     }

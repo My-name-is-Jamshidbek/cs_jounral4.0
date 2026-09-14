@@ -53,7 +53,24 @@
         &gt;
       </button>
     </div>
-    <div id="issuesList" class="space-y-6 mt-8"></div>
+    {# Every issue link is in the page source, not built by the script below. #}
+    {# Crawlers, Google Scholar's included, do not run JavaScript, so this list #}
+    {# is the only way the archive leads them to older issues. The script just #}
+    {# shows one year at a time. #}
+    <div id="issuesList" class="space-y-6 mt-8">
+      {% for group in issue_years %}
+      <div class="issue-year space-y-6" data-year="{{ group.year }}">
+        {% for issue in group.issues %}
+        <a href="{{ issue.url }}" class="block">
+          <div class="text-base font-medium text-gray-800">{% trans 'Volume' %} {{ issue.volume }} | {% trans 'Issue' %} {{ issue.issue }} | {{ issue.date }}</div>
+          {% if issue.title %}<div class="text-gray-600 font-medium">{{ issue.title }}</div>{% endif %}
+        </a>
+        {% if not forloop.last %}<hr class="border-gray-200 my-0">{% endif %}
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <div id="noIssuesMessage" class="text-gray-500 text-center py-8" hidden>{% trans 'No issues available for this year.' %}</div>
+    </div>
   </div>
   <!-- Right: sidebar -->
   <aside class="col-span-12 md:col-span-4 space-y-6">
@@ -120,15 +137,7 @@
 <script>
   // Load dynamic data from Django context
   const decades = {{ decades_data|safe }};
-  const issues = {{ issues_data|safe }};
   const currentYear = {{ current_year }};
-
-  // Translations for JavaScript
-  const translations = {
-    volume: "{% trans 'Volume' %}",
-    issue: "{% trans 'Issue' %}",
-    noIssuesAvailable: "{% trans 'No issues available for this year.' %}"
-  };
 
   // Find most recent decade that has issues
   const decadesList = Object.keys(decades).sort().reverse();
@@ -192,40 +201,15 @@
   }
 
   function renderIssues() {
-    const issuesList = document.getElementById("issuesList");
-    issuesList.innerHTML = "";
-
-    const yearIssues = issues[selectedYear] || [];
-    yearIssues.forEach((issue, idx, arr) => {
-      const div = document.createElement("div");
-      div.className = "";
-      div.innerHTML =
-        `<div class="text-base font-medium text-gray-800">${translations.volume} ${issue.volume} | ${translations.issue} ${issue.issue} | ${issue.date}</div>` +
-        (issue.title ? `<div class="text-gray-600 font-medium">${issue.title}</div>` : "");
-
-      // Use the pre-generated URL from the backend
-      div.onclick = function() {
-        window.location.href = issue.url;
-      };
-      div.style.cursor = "pointer";
-
-      issuesList.appendChild(div);
-
-      // Add divider if not last item
-      if (idx < arr.length - 1) {
-        const hr = document.createElement("hr");
-        hr.className = "border-gray-200 my-0";
-        issuesList.appendChild(hr);
-      }
+    // The issue links are already in the page (see #issuesList); only show the
+    // selected year's group rather than rebuilding them.
+    let shown = false;
+    document.querySelectorAll("#issuesList .issue-year").forEach(group => {
+      const match = Number(group.dataset.year) === selectedYear;
+      group.hidden = !match;
+      shown = shown || match;
     });
-
-    // Show message if no issues
-    if (yearIssues.length === 0) {
-      const div = document.createElement("div");
-      div.className = "text-gray-500 text-center py-8";
-      div.textContent = translations.noIssuesAvailable;
-      issuesList.appendChild(div);
-    }
+    document.getElementById("noIssuesMessage").hidden = shown;
   }
 
   function updateDecadeActiveLine() {
