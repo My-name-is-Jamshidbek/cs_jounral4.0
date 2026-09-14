@@ -103,4 +103,16 @@ def site_context(request):
         from django.conf import settings
         if settings.DEBUG:
             print(f"Context processor error loading defaults: {e}")
+
+    # Canonical and hreflang links for the page being served, rendered by
+    # base.html. A view that knows better (an article, the current issue) passes
+    # its own canonical_url and alternate_urls, which take precedence.
+    try:
+        from django.conf import settings
+        from core.seo import language_urls
+        urls = language_urls(request)
+        context['alternate_urls'] = sorted(urls.items())
+        context['canonical_url'] = urls.get(settings.LANGUAGE_CODE)
+    except Exception:
+        pass
     return context

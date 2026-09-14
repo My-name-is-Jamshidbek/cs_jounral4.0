@@ -1,12 +1,13 @@
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.utils import timezone, translation
+from django.utils import timezone
 import json
 
 from django.utils.datetime_safe import datetime
 from django.db.models import F, Q
 
+from core.seo import language_urls
 from crossref.services import split_authors
 from issue.models import Issue, JournalIssue
 
@@ -27,6 +28,13 @@ def current_issue(request):
         'current_issue': current_issue,
         'articles': articles,
     }
+    if current_issue:
+        # /issue/current/ shows the same page as the issue's own URL, and stops
+        # doing so once the next issue is out. The permanent URL is therefore the
+        # canonical one, so this address never competes with it in the index.
+        urls = language_urls(request, reverse('item_issue', kwargs={'pk': current_issue.pk}))
+        context['canonical_url'] = urls.get(settings.LANGUAGE_CODE)
+        context['alternate_urls'] = sorted(urls.items())
 
     return render(request, 'current_issue.html', context)
 
@@ -160,11 +168,8 @@ def article_detail(request, pk):
     # default-language one from all of them, so search engines — and Google
     # Scholar in particular — see one article rather than three near-duplicates.
     # It is also the URL registered with Crossref, so the DOI agrees with it.
-    language_urls = {}
-    for code, _ in settings.LANGUAGES:
-        with translation.override(code):
-            language_urls[code] = request.build_absolute_uri(article.get_absolute_url())
-    absolute_url = language_urls.get(settings.LANGUAGE_CODE) or request.build_absolute_uri(
+    urls = language_urls(request, article.get_absolute_url())
+    absolute_url = urls.get(settings.LANGUAGE_CODE) or request.build_absolute_uri(
         article.get_absolute_url()
     )
     # Volume and issue live on both the Issue and the article, and the two
@@ -182,6 +187,7 @@ def article_detail(request, pk):
         'citation_volume': citation_volume,
         'citation_issue': citation_issue,
         'absolute_url': absolute_url,
-        'alternate_urls': sorted(language_urls.items()),
+        'canonical_url': absolute_url,
+        'alternate_urls': sorted(urls.items()),
     }
     return render(request, 'article_detail.html', context)

@@ -6,10 +6,8 @@
    element renders it literally, so use the cleaned journal name here. #}
 {% block title %}{{ article.title }} | {{ journal_title_plain|default:site_title|striptags }}{% endblock %}
 
+{# canonical and hreflang links come from base.html (canonical_url from the view). #}
 {% block scholar_meta %}
-  <link rel="canonical" href="{{ absolute_url }}" />
-  {% for code, url in alternate_urls %}<link rel="alternate" hreflang="{{ code }}" href="{{ url }}" />
-  {% endfor %}<link rel="alternate" hreflang="x-default" href="{{ absolute_url }}" />
   <meta name="robots" content="index,follow" />
   <meta name="citation_title" content="{{ article.title|striptags }}" />
   {% for author in authors_citation %}
