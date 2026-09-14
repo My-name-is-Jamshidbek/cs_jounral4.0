@@ -13,7 +13,10 @@
     <link rel="stylesheet" href="{% static 'css/tailwind.css' %}" />
     <link rel="stylesheet" href="{% static 'css/flowbite.css' %}" />
     <script src="{% static 'js/alpine.js' %}" defer></script>
-    <script src="{% static 'js/flowbite.js' %}"></script>
+    {# The ?v= suffix forces browsers past their cached copy. nginx sends no #}
+    {# Cache-Control for static files, so a replaced file is otherwise served #}
+    {# stale for weeks; bump it whenever flowbite.js is replaced on the server. #}
+    <script src="{% static 'js/flowbite.js' %}?v=2.3.0"></script>
 
     <style>
       [x-cloak] {
