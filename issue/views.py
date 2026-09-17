@@ -169,9 +169,7 @@ def article_detail(request, pk):
     # Scholar in particular — see one article rather than three near-duplicates.
     # It is also the URL registered with Crossref, so the DOI agrees with it.
     urls = language_urls(request, article.get_absolute_url())
-    absolute_url = urls.get(settings.LANGUAGE_CODE) or request.build_absolute_uri(
-        article.get_absolute_url()
-    )
+    absolute_url = urls[settings.LANGUAGE_CODE]
     # Volume and issue live on both the Issue and the article, and the two
     # drift: articles in "Volume 3, Issue 12" were carrying volume 26. The Issue
     # is what the journal actually publishes under, and it is already what the

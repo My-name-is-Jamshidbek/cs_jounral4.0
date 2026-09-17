@@ -2,7 +2,9 @@ from django.contrib import admin, messages
 from django.http import HttpResponse
 
 from crossref.deposits import approve_and_submit, collect_deposit_entries, create_batch
-from crossref.services import CrossrefError, article_title, build_deposit_xml, get_environment
+from crossref.services import (
+    CrossrefError, article_title, build_deposit_xml, build_resource_url, get_environment,
+)
 
 from .models import Issue, JournalIssue
 
@@ -98,7 +100,7 @@ class JournalIssueAdmin(admin.ModelAdmin):
             return
 
         entries = [
-            (article, article.doi, request.build_absolute_uri(article.get_absolute_url()))
+            (article, article.doi, build_resource_url(article))
             for article in with_doi.order_by('issue_id', 'id')
         ]
         xml = build_deposit_xml(entries)

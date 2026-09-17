@@ -107,9 +107,11 @@ def site_context(request):
     # Canonical and hreflang links for the page being served, rendered by
     # base.html. A view that knows better (an article, the current issue) passes
     # its own canonical_url and alternate_urls, which take precedence.
+    # site_origin is the SITE_BASE_URL host, for absolute URLs built in templates.
     try:
         from django.conf import settings
-        from core.seo import language_urls
+        from core.seo import language_urls, site_origin
+        context['site_origin'] = site_origin(request)
         urls = language_urls(request)
         context['alternate_urls'] = sorted(urls.items())
         context['canonical_url'] = urls.get(settings.LANGUAGE_CODE)

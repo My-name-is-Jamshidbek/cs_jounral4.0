@@ -22,7 +22,7 @@
   {% if issn_print %}<meta name="citation_issn" content="{{ issn_print }}" />{% endif %}
   {% if issn_online and issn_online != issn_print %}<meta name="citation_issn" content="{{ issn_online }}" />{% endif %}
   {% if article.doi %}<meta name="citation_doi" content="{{ article.doi }}" />{% endif %}
-  {% if article.file %}<meta name="citation_pdf_url" content="{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}" />{% endif %}
+  {% if article.file %}<meta name="citation_pdf_url" content="{{ site_origin }}{{ article.file.url }}" />{% endif %}
   <meta name="citation_language" content="{{ LANGUAGE_CODE }}" />
   {% if article.description %}<meta name="citation_abstract" content="{{ article.description|striptags|truncatechars:500 }}" />{% endif %}
   {% if site_keywords %}<meta name="citation_keywords" content="{{ site_keywords }}" />{% endif %}
@@ -33,7 +33,7 @@
     "headline": "{{ article.title|escapejs }}",
     "name": "{{ article.title|escapejs }}",
     "url": "{{ absolute_url }}",
-    {% if article.file %}"sameAs": "{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}",
+    {% if article.file %}"sameAs": "{{ site_origin }}{{ article.file.url }}",
     {% endif %}"datePublished": "{{ article.publication_date|date:'Y-m-d' }}",
     "inLanguage": "{{ LANGUAGE_CODE }}",
     "isPartOf": {
@@ -54,7 +54,7 @@
     "identifier": [{"@type": "PropertyValue", "propertyID": "DOI", "value": "{{ article.doi }}"}, "gs:{{ article.scholar_cluster_id }}"]{% elif article.doi %},
     "identifier": {"@type": "PropertyValue", "propertyID": "DOI", "value": "{{ article.doi }}"}{% elif article.scholar_cluster_id %},
     "identifier": "gs:{{ article.scholar_cluster_id }}"{% endif %}{% if article.file %},
-    "encoding": {"@type": "MediaObject", "contentUrl": "{{ request.scheme }}://{{ request.get_host }}{{ article.file.url }}", "fileFormat": "application/pdf"}{% endif %},
+    "encoding": {"@type": "MediaObject", "contentUrl": "{{ site_origin }}{{ article.file.url }}", "fileFormat": "application/pdf"}{% endif %},
     "publisher": {"@type": "Organization", "name": "{{ publisher|default:site_title|escapejs }}"}
   }
   </script>
