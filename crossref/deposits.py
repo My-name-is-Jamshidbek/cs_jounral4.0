@@ -19,7 +19,7 @@ from crossref.models import DepositBatch, DepositItem
 from crossref.services import (
     article_title, author_problems, build_deposit_xml, build_doi,
     build_resource_url, get_doi_prefix, get_environment, get_site_base_url,
-    get_site_config, make_batch_id, submit_batch,
+    get_site_config, make_batch_id, submit_batch, CrossrefError,
 )
 
 
@@ -138,6 +138,42 @@ def collect_update_entries(issue_id=None, limit=0, article_ids=None, resource_ov
     return entries, skipped
 
 
+def collect_redirect_entries(doi_targets):
+    """
+    Pair surplus DOIs with the articles they should resolve to.
+
+    `doi_targets` maps a registered DOI to the pk of the surviving article. This
+    is for the case a duplicate article was deleted before its DOI was dealt
+    with: the DOI is permanent and now resolves to a 404, and there is no row
+    left to re-deposit from. The surviving article's metadata is sent under the
+    surplus DOI, with the surviving article's page as the landing URL.
+    """
+    from issue.models import JournalIssue
+
+    base_url = get_site_base_url()
+    entries = []
+    for doi, pk in doi_targets.items():
+        try:
+            target = JournalIssue.objects.get(pk=pk)
+        except JournalIssue.DoesNotExist:
+            raise CrossrefError(f"target article #{pk} for {doi} does not exist.")
+        if not target.doi:
+            raise CrossrefError(f"target article #{pk} has no DOI of its own; register it first.")
+        if target.doi == doi:
+            raise CrossrefError(f"{doi} is already article #{pk}'s own DOI; nothing to redirect.")
+        holder = JournalIssue.objects.filter(doi=doi).first()
+        if holder:
+            raise CrossrefError(
+                f"{doi} still belongs to article #{holder.pk}. Use --article {holder.pk} "
+                f"--redirect-to {pk} while that article exists."
+            )
+        reason = article_deposit_problem(target)
+        if reason:
+            raise CrossrefError(f"target article #{pk} cannot be deposited: {reason}")
+        entries.append((target, doi, build_resource_url(target, base_url)))
+    return entries
+
+
 def create_batch(entries, skipped=(), environment=None, site_config=None, note='',
                  kind=DepositBatch.NEW):
     """Freeze `entries` into a pending DepositBatch together with its XML."""
@@ -187,6 +223,18 @@ def validate_batch(batch):
                 f"(e.g. #{moved[0].article_id} now has {moved[0].article.doi or 'no DOI'}, "
                 f"batch has {moved[0].proposed_doi}). Cancel this batch and queue a new one."
             )
+    elif batch.kind == DepositBatch.REDIRECT:
+        # A redirect sends a surplus DOI with a surviving article's metadata. The
+        # article must keep its own DOI, and the surplus one must be nobody's:
+        # if it is back on a live article, this is an update, not a redirect.
+        for i in items:
+            if not i.article.doi or i.article.doi == i.proposed_doi:
+                return (f"#{i.article_id} must keep its own DOI, distinct from {i.proposed_doi}. "
+                        "Cancel this batch and queue a new one.")
+        held = JournalIssue.objects.filter(doi__in=[i.proposed_doi for i in items])
+        if held.exists():
+            return (f"{held.first().doi} is a live article's DOI (#{held.first().pk}); "
+                    "redirect only DOIs that no article carries.")
     else:
         already = [i for i in items if i.article.doi]
         if already:
@@ -259,8 +307,11 @@ def approve_and_submit(batch, user=None, actor=None, timeout=60):
 
     with transaction.atomic():
         for item in batch.items.select_related('article'):
-            # Already equal for an update batch, which validate_batch enforces.
-            if item.article.doi != item.proposed_doi:
+            # Only a new batch hands an article its DOI. An update sends the
+            # article's own DOI, and a redirect sends a surplus DOI under the
+            # article's metadata — writing that back would swap the article's
+            # real DOI for the surplus one.
+            if batch.kind == DepositBatch.NEW and item.article.doi != item.proposed_doi:
                 item.article.doi = item.proposed_doi
                 item.article.save(update_fields=['doi'])
             item.status = DepositItem.DEPOSITED
@@ -303,8 +354,8 @@ def record_batch_result(batch, state, message):
         batch.items.update(status=DepositItem.FAILED)
         if released:
             batch.append_log(f"Cleared {released} unregistered DOI(s) from their articles.")
-        elif batch.kind == DepositBatch.UPDATE:
-            batch.append_log("Update batch: the existing DOIs were left untouched.")
+        elif batch.kind in (DepositBatch.UPDATE, DepositBatch.REDIRECT):
+            batch.append_log(f"{batch.get_kind_display()}: the existing DOIs were left untouched.")
 
     batch.save(update_fields=['status', 'checked_at', 'log'])
     return batch

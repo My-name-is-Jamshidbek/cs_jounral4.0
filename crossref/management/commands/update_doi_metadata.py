@@ -8,12 +8,19 @@ pointed at the article that survived.
 
 Nothing here can create a DOI, and a rejected update never clears a DOI from its
 article — those DOIs are registered and permanent.
+
+Two ways to redirect a surplus DOI at a surviving article:
+
+  --article 283 --redirect-to 54    while article 283 still exists
+  --doi 10.64964/comp.2024.0283 --redirect-to 54    after it has been deleted
 """
 
 from django.core.management.base import BaseCommand, CommandError
 
 from crossref.console import force_utf8
-from crossref.deposits import approve_and_submit, collect_update_entries, create_batch
+from crossref.deposits import (
+    approve_and_submit, collect_redirect_entries, collect_update_entries, create_batch,
+)
 from crossref.models import DepositBatch
 from crossref.services import (
     CrossrefError, article_title, get_environment, get_site_config,
@@ -31,6 +38,9 @@ class Command(BaseCommand):
                             help="Only articles belonging to this Issue id.")
         parser.add_argument('--article', type=int, action='append', default=None,
                             help="Only this article id (repeatable).")
+        parser.add_argument('--doi', action='append', default=None,
+                            help="A registered DOI whose article no longer exists (repeatable); "
+                                 "needs --redirect-to.")
         parser.add_argument('--limit', type=int, default=0,
                             help="Update at most N articles (0 = no limit).")
         parser.add_argument('--max', type=int, default=DEFAULT_MAX,
@@ -55,14 +65,15 @@ class Command(BaseCommand):
         site_config = get_site_config()
         environment = get_environment()
 
-        override = None
-        if options['redirect_to']:
-            override = self._redirect_map(options)
-
-        entries, skipped = collect_update_entries(
-            issue_id=options['issue'], limit=options['limit'],
-            article_ids=options['article'], resource_override=override,
-        )
+        if options['doi']:
+            entries, skipped, kind = self._redirect_orphans(options), [], DepositBatch.REDIRECT
+        else:
+            override = self._redirect_map(options) if options['redirect_to'] else None
+            entries, skipped = collect_update_entries(
+                issue_id=options['issue'], limit=options['limit'],
+                article_ids=options['article'], resource_override=override,
+            )
+            kind = DepositBatch.UPDATE
 
         for article, reason in skipped:
             label = article_title(article) or '(untitled)'
@@ -72,7 +83,7 @@ class Command(BaseCommand):
             self.stdout.write("No registered DOIs matched. Nothing sent.")
             return
 
-        self.stdout.write(f"{len(entries)} DOI(s) to update on {environment}:")
+        self.stdout.write(f"{len(entries)} DOI(s) to {'redirect' if kind == DepositBatch.REDIRECT else 'update'} on {environment}:")
         for article, doi, url in entries:
             pages = f"{article.first_page}-{article.last_page}" if article.first_page else "no pages"
             self.stdout.write(f"  {doi}  ->  {url}   [{pages}]   {article_title(article)[:50]}")
@@ -88,19 +99,26 @@ class Command(BaseCommand):
             )
 
         batch = create_batch(
-            entries, skipped, environment=environment, site_config=site_config,
-            kind=DepositBatch.UPDATE,
-            note=f"Queued by update_doi_metadata with {len(entries)} DOI(s) for {environment}.",
+            entries, skipped, environment=environment, site_config=site_config, kind=kind,
+            note=f"Queued by update_doi_metadata ({kind}) with {len(entries)} DOI(s) for {environment}.",
         )
 
         ok, message = approve_and_submit(batch, actor='update_doi_metadata')
         if not ok:
-            raise CommandError(f"{batch.batch_id}: update failed - {message[:500]}")
+            raise CommandError(f"{batch.batch_id}: deposit failed - {message[:500]}")
 
         self.stdout.write(self.style.SUCCESS(
             f"{batch.batch_id}: {len(entries)} DOI(s) re-deposited to {environment}. "
-            "Run check_doi_deposits later to confirm Crossref accepted the update."
+            "Run check_doi_deposits later to confirm Crossref accepted it."
         ))
+
+    def _redirect_orphans(self, options):
+        """Entries for --doi: surplus DOIs whose article rows are gone."""
+        if not options['redirect_to']:
+            raise CommandError("--doi needs --redirect-to to say which article the DOI(s) should resolve to.")
+        if options['article'] or options['issue']:
+            raise CommandError("--doi cannot be combined with --article or --issue.")
+        return collect_redirect_entries({doi: options['redirect_to'] for doi in options['doi']})
 
     def _redirect_map(self, options):
         """Build {article pk: landing page of the target article} for --redirect-to."""
@@ -108,7 +126,7 @@ class Command(BaseCommand):
         from issue.models import JournalIssue
 
         if not options['article']:
-            raise CommandError("--redirect-to needs --article to say which DOI(s) to redirect.")
+            raise CommandError("--redirect-to needs --article or --doi to say which DOI(s) to redirect.")
         try:
             target = JournalIssue.objects.get(pk=options['redirect_to'])
         except JournalIssue.DoesNotExist:

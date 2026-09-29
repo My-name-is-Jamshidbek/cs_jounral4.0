@@ -73,6 +73,7 @@ python manage.py register_dois --issue 13       # mint + deposit in one step
 python manage.py register_dois --wait 15        # ...and poll for the result
 python manage.py check_doi_deposits             # collect results of earlier deposits
 python manage.py update_doi_metadata --issue 13 # re-send registered DOIs with corrected metadata
+python manage.py update_doi_metadata --doi 10.64964/comp.2024.0283 --redirect-to 54  # surplus DOI of a deleted duplicate -> survivor
 python manage.py import_page_numbers --dry-run  # read first/last page out of each article PDF
 ```
 

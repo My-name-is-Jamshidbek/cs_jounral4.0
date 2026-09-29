@@ -26,9 +26,11 @@ class DepositBatch(models.Model):
 
     NEW = 'new'
     UPDATE = 'update'
+    REDIRECT = 'redirect'
     KIND_CHOICES = [
         (NEW, 'Register new DOIs'),
         (UPDATE, 'Update metadata of existing DOIs'),
+        (REDIRECT, 'Point surplus DOIs at surviving articles'),
     ]
 
     batch_id = models.CharField(
